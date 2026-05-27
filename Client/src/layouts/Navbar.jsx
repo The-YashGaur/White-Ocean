@@ -59,7 +59,7 @@ const Navbar = () => {
                   src={
                     user?.profileImage
                       ? user.profileImage.startsWith('/uploads')
-                        ? `http://localhost:5000${user.profileImage}`
+                        ? `http://localhost:8000${user.profileImage}`
                         : user.profileImage
                       : `https://ui-avatars.com/api/?name=${user?.firstName || 'U'}+${user?.lastName || ''}&background=random`
                   }

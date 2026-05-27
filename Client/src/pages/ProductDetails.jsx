@@ -31,7 +31,7 @@ const ProductDetails = () => {
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState('');
 
-  const API_URL = 'http://localhost:5000';
+  const API_URL = 'http://localhost:8000';
 
   const getImageUrl = (imagePath) => {
     if (!imagePath) {

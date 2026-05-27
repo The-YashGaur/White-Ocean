@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-const API_BASE = 'http://localhost:5000/api/products';
+const API_BASE = 'http://localhost:8000/api/products';
 
 const useProductStore = create((set, get) => ({
   // ── State ──────────────────────────────────

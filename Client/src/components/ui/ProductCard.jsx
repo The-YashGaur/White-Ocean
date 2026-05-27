@@ -9,7 +9,7 @@ const ProductCard = ({ product }) => {
   const navigate = useNavigate();
   const { addToCart } = useCartStore();
 
-  const API_URL = 'http://localhost:5000';
+  const API_URL = 'http://localhost:8000';
 
   const name = product.productName || product.name;
   const seller = product.sellerName || product.vendor;

@@ -11,7 +11,7 @@ const useAuthStore = create((set, get) => ({
     set({ isLoading: true });
     
     try {
-      const response = await fetch('http://localhost:5000/api/auth/login', {
+      const response = await fetch('http://localhost:8000/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -46,7 +46,7 @@ const useAuthStore = create((set, get) => ({
     set({ isLoading: true });
     
     try {
-      const response = await fetch('http://localhost:5000/api/auth/register', {
+      const response = await fetch('http://localhost:8000/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -80,7 +80,7 @@ const useAuthStore = create((set, get) => ({
   
   logout: async () => {
     try {
-      await fetch('http://localhost:5000/api/auth/logout', { 
+      await fetch('http://localhost:8000/api/auth/logout', { 
         method: 'POST',
         credentials: 'include'
       });
@@ -98,7 +98,7 @@ const useAuthStore = create((set, get) => ({
     set({ isLoading: true });
     
     try {
-      const response = await fetch('http://localhost:5000/api/auth/profile', {
+      const response = await fetch('http://localhost:8000/api/auth/profile', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -129,7 +129,7 @@ const useAuthStore = create((set, get) => ({
   checkAuth: async () => {
     set({ isLoading: true });
     try {
-      const response = await fetch('http://localhost:5000/api/auth/me', {
+      const response = await fetch('http://localhost:8000/api/auth/me', {
         method: 'GET',
         credentials: 'include'
       });
@@ -163,7 +163,7 @@ const useAuthStore = create((set, get) => ({
 
   sendEmailOTP: async (email) => {
     try {
-      const response = await fetch('http://localhost:5000/api/auth/send-email-otp', {
+      const response = await fetch('http://localhost:8000/api/auth/send-email-otp', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -182,7 +182,7 @@ const useAuthStore = create((set, get) => ({
   verifyEmailOTP: async (email, otp) => {
     set({ isLoading: true });
     try {
-      const response = await fetch('http://localhost:5000/api/auth/verify-email-otp', {
+      const response = await fetch('http://localhost:8000/api/auth/verify-email-otp', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

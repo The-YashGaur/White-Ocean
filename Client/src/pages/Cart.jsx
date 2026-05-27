@@ -14,7 +14,7 @@ const Cart = () => {
     getSubtotal,
   } = useCartStore();
 
-  const API_URL = 'http://localhost:5000';
+  const API_URL = 'http://localhost:8000';
 
   const getImageUrl = (imagePath) => {
     if (!imagePath) {

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-const API_URL = 'http://localhost:5000/api/orders';
+const API_URL = 'http://localhost:8000/api/orders';
 
 const useOrderStore = create((set) => ({
   orders: [],

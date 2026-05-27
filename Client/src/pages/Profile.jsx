@@ -121,8 +121,8 @@ const Profile = () => {
     try {
       const url =
         type === 'email'
-          ? 'http://localhost:5000/api/auth/send-email-otp'
-          : 'http://localhost:5000/api/auth/send-otp';
+          ? 'http://localhost:8000/api/auth/send-email-otp'
+          : 'http://localhost:8000/api/auth/send-otp';
 
       const response = await fetch(url, {
         method: 'POST',
@@ -165,8 +165,8 @@ const Profile = () => {
     try {
       const url =
         verifyingType === 'email'
-          ? 'http://localhost:5000/api/auth/verify-email-otp'
-          : 'http://localhost:5000/api/auth/verify-otp';
+          ? 'http://localhost:8000/api/auth/verify-email-otp'
+          : 'http://localhost:8000/api/auth/verify-otp';
 
       const response = await fetch(url, {
         method: 'POST',
@@ -236,7 +236,7 @@ const Profile = () => {
     formData.append('image', file);
 
     try {
-      const response = await fetch('http://localhost:5000/api/upload', {
+      const response = await fetch('http://localhost:8000/api/upload', {
         method: 'POST',
         body: formData,
       });
@@ -292,7 +292,7 @@ const Profile = () => {
             src={
               user?.profileImage
                 ? user.profileImage.startsWith('/uploads')
-                  ? `http://localhost:5000${user.profileImage}`
+                  ? `http://localhost:8000${user.profileImage}`
                   : user.profileImage
                 : `https://ui-avatars.com/api/?name=${user?.firstName || 'U'}+${user?.lastName || ''}&background=random`
             }
@@ -436,11 +436,11 @@ const Profile = () => {
             src={
               editData.profileImage
                 ? editData.profileImage.startsWith('/uploads')
-                  ? `http://localhost:5000${editData.profileImage}`
+                  ? `http://localhost:8000${editData.profileImage}`
                   : editData.profileImage
                 : user?.profileImage
                   ? user.profileImage.startsWith('/uploads')
-                    ? `http://localhost:5000${user.profileImage}`
+                    ? `http://localhost:8000${user.profileImage}`
                     : user.profileImage
                   : `https://ui-avatars.com/api/?name=${user?.firstName || 'U'}+${user?.lastName || ''}&background=random`
             }
