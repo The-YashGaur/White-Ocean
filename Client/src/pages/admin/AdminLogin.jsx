@@ -5,27 +5,42 @@ import logo from '../../assets/whiteocean.png';
 import './AdminLayout.css';
 
 const AdminLogin = () => {
-  const [email, setEmail] = useState('admin@whiteocean.com');
-  const [password, setPassword] = useState('admin123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
 
-    // Simulate short network delay for immersive UX
-    setTimeout(() => {
-      if (email === 'admin@whiteocean.com' && password === 'admin123') {
-        localStorage.setItem('whiteocean_admin_token', 'mock_admin_token_abcdef123456');
+    try {
+      const response = await fetch('http://localhost:8000/api/auth/login?noCookie=true', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-no-cookie': 'true'
+        },
+        body: JSON.stringify({ email, password })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        localStorage.setItem('whiteocean_admin_token', data.token || 'mock_admin_token_abcdef123456');
+        // Reset sync flag so admin data re-fetches with the fresh token
+        localStorage.removeItem('whiteocean_admin_hasSynced');
         navigate('/admin/dashboard');
       } else {
-        setError('Invalid admin credentials. Please double check.');
+        setError(data.error || 'Invalid admin credentials. Please double check.');
         setIsLoading(false);
       }
-    }, 800);
+    } catch (err) {
+      setError('Connection error. Please check if your backend server is active.');
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -87,14 +102,7 @@ const AdminLogin = () => {
           </button>
         </form>
 
-        <div className="admin-login-info-box">
-          <strong style={{ display: 'block', color: 'var(--admin-color-dark)', marginBottom: '0.25rem' }}>Security Note:</strong>
-          Use the following preloaded keys to evaluate administrative features:
-          <div style={{ marginTop: '0.5rem', fontFamily: 'monospace', fontSize: '0.85rem' }}>
-            Email: <span style={{ color: 'var(--admin-color-primary)' }}>admin@whiteocean.com</span><br/>
-            Pass: <span style={{ color: 'var(--admin-color-primary)' }}>admin123</span>
-          </div>
-        </div>
+
       </div>
     </div>
   );

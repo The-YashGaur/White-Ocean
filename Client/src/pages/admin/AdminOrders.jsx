@@ -17,7 +17,36 @@ const AdminOrders = () => {
   const [statusFilter, setStatusFilter] = useState('All');
 
   useEffect(() => {
-    setOrders(getAdminData('orders') || []);
+    // Directly fetch fresh orders from backend on every mount
+    const loadOrders = async () => {
+      try {
+        const token = localStorage.getItem('whiteocean_admin_token');
+        const headers = { 'Content-Type': 'application/json' };
+        if (token && !token.startsWith('mock_')) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+        const res = await fetch('http://localhost:8000/api/admin/orders', {
+          headers,
+          credentials: 'include'
+        });
+        const data = await res.json();
+        if (data.success) {
+          setOrders(data.data);
+          localStorage.setItem('whiteocean_admin_orders', JSON.stringify(data.data));
+        }
+      } catch (err) {
+        // Fallback to cache if network fails
+        setOrders(getAdminData('orders') || []);
+      }
+    };
+
+    loadOrders();
+
+    const handleUpdate = () => {
+      setOrders(getAdminData('orders') || []);
+    };
+    window.addEventListener('adminDataUpdated', handleUpdate);
+    return () => window.removeEventListener('adminDataUpdated', handleUpdate);
   }, []);
 
   // Filter and search logic

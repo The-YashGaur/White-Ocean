@@ -1,390 +1,318 @@
 const STORAGE_PREFIX = 'whiteocean_admin_';
+const API_BASE = 'http://localhost:8000/api/admin';
 
-// Initial Mock Datasets
+// Helper: Get admin auth headers using stored JWT token
+const getAdminHeaders = () => {
+  const token = localStorage.getItem('whiteocean_admin_token');
+  const headers = { 'Content-Type': 'application/json' };
+  if (token && !token.startsWith('mock_')) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
+};
+
+// Synchronous Fallbacks
 const initialUsers = [
-  {
-    _id: 'u1',
-    firstName: 'John',
-    lastName: 'Doe',
-    email: 'john.doe@example.com',
-    phone: '+1 555-0199',
-    createdAt: '2026-04-12T10:00:00Z',
-    address: '123 Main St, New York, NY 10001',
-    totalOrders: 12,
-    totalSpent: 480.50,
-    status: 'Active',
-  },
-  {
-    _id: 'u2',
-    firstName: 'Jane',
-    lastName: 'Smith',
-    email: 'jane.smith@example.com',
-    phone: '+1 555-0145',
-    createdAt: '2026-03-24T14:30:00Z',
-    address: '456 Oak Ave, Los Angeles, CA 90001',
-    totalOrders: 28,
-    totalSpent: 1250.75,
-    status: 'Active',
-  },
-  {
-    _id: 'u3',
-    firstName: 'Robert',
-    lastName: 'Johnson',
-    email: 'robert.j@example.com',
-    phone: '+1 555-0188',
-    createdAt: '2026-05-01T08:15:00Z',
-    address: '789 Pine Rd, Chicago, IL 60601',
-    totalOrders: 3,
-    totalSpent: 92.20,
-    status: 'Blocked',
-  },
-  {
-    _id: 'u4',
-    firstName: 'Emily',
-    lastName: 'Brown',
-    email: 'emily.b@example.com',
-    phone: '+1 555-0122',
-    createdAt: '2026-05-18T16:45:00Z',
-    address: '321 Elm St, Seattle, WA 98101',
-    totalOrders: 1,
-    totalSpent: 24.50,
-    status: 'Active',
-  }
+  { _id: 'u1', firstName: 'John', lastName: 'Doe', email: 'john.doe@example.com', phone: '+1 555-0199', createdAt: new Date().toISOString(), address: '123 Main St, New York', totalOrders: 0, totalSpent: 0, status: 'Active' }
 ];
-
 const initialVendors = [
-  {
-    id: 'v1',
-    name: 'Fresh Farms Ltd',
-    email: 'contact@freshfarms.com',
-    phone: '+1 555-0210',
-    rating: 4.8,
-    ordersCount: 1240,
-    salesAmount: 8430.00,
-    image: 'https://images.unsplash.com/photo-1595853035070-59a39fe84dd3?auto=format&fit=crop&w=200&q=80',
-    status: 'Approved'
-  },
-  {
-    id: 'v2',
-    name: 'Green Valley Organics',
-    email: 'sales@greenvalley.com',
-    phone: '+1 555-0220',
-    rating: 4.9,
-    ordersCount: 3450,
-    salesAmount: 22450.50,
-    image: 'https://images.unsplash.com/photo-1533900298318-6b8da08a523e?auto=format&fit=crop&w=200&q=80',
-    status: 'Approved'
-  },
-  {
-    id: 'v3',
-    name: 'Ocean Seafood Co',
-    email: 'info@oceanseafood.com',
-    phone: '+1 555-0230',
-    rating: 4.7,
-    ordersCount: 890,
-    salesAmount: 14210.00,
-    image: 'https://images.unsplash.com/photo-1615141982883-c7ad0e69fd62?auto=format&fit=crop&w=200&q=80',
-    status: 'Pending'
-  },
-  {
-    id: 'v4',
-    name: 'Quick Bakeries',
-    email: 'hello@quickbakeries.com',
-    phone: '+1 555-0240',
-    rating: 4.2,
-    ordersCount: 150,
-    salesAmount: 1200.00,
-    image: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=200&q=80',
-    status: 'Suspended'
-  }
+  { _id: 'v1', firstName: 'Fresh Farms', lastName: 'Ltd', email: 'contact@freshfarms.com', phone: '+1 555-0210', rating: 4.8, ordersCount: 0, salesAmount: 0, profileImage: 'https://images.unsplash.com/photo-1595853035070-59a39fe84dd3?auto=format&fit=crop&w=200&q=80', status: 'Approved', role: 'vendor' }
 ];
 
-const initialProducts = [
-  {
-    _id: 'p1',
-    productName: 'Organic Bananas',
-    category: 'Fruits',
-    sellerName: 'Fresh Farms Ltd',
-    price: 4.99,
-    stockQuantity: 120,
-    productImage: 'https://images.unsplash.com/photo-1571501443621-e0166a41f861?auto=format&fit=crop&w=400&q=80',
-    description: 'Fresh organic bananas directly from the farm.',
-    rating: 4.8,
-    isFeatured: true,
-    isHidden: false,
-    isApproved: true
-  },
-  {
-    _id: 'p2',
-    productName: 'Fresh Avocados',
-    category: 'Vegetables',
-    sellerName: 'Green Valley Organics',
-    price: 6.50,
-    stockQuantity: 8, // Low stock alert!
-    productImage: 'https://images.unsplash.com/photo-1523049673857-eb18f1d7b578?auto=format&fit=crop&w=400&q=80',
-    description: 'Perfectly ripe avocados, great for guacamole.',
-    rating: 4.9,
-    isFeatured: true,
-    isHidden: false,
-    isApproved: true
-  },
-  {
-    _id: 'p3',
-    productName: 'Whole Milk 1L',
-    category: 'Dairy',
-    sellerName: 'Green Valley Organics',
-    price: 2.99,
-    stockQuantity: 85,
-    productImage: 'https://images.unsplash.com/photo-1563636619-e9143da7973b?auto=format&fit=crop&w=400&q=80',
-    description: 'Farm fresh whole milk.',
-    rating: 4.5,
-    isFeatured: false,
-    isHidden: false,
-    isApproved: true
-  },
-  {
-    _id: 'p4',
-    productName: 'Atlantic Salmon',
-    category: 'Seafood',
-    sellerName: 'Ocean Seafood Co',
-    price: 15.99,
-    stockQuantity: 3, // Low stock alert!
-    productImage: 'https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?auto=format&fit=crop&w=400&q=80',
-    description: 'Premium wild-caught Atlantic salmon.',
-    rating: 4.7,
-    isFeatured: true,
-    isHidden: false,
-    isApproved: false // Pending approval
-  },
-  {
-    _id: 'p5',
-    productName: 'Organic Spinach',
-    category: 'Vegetables',
-    sellerName: 'Green Valley Organics',
-    price: 3.50,
-    stockQuantity: 40,
-    productImage: 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?auto=format&fit=crop&w=400&q=80',
-    description: 'Crisp organic spinach leaves.',
-    rating: 4.6,
-    isFeatured: false,
-    isHidden: false,
-    isApproved: true
-  },
-  {
-    _id: 'p6',
-    productName: 'Orange Juice 1L',
-    category: 'Beverages',
-    sellerName: 'Fresh Farms Ltd',
-    price: 5.49,
-    stockQuantity: 0, // Out of stock!
-    productImage: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=400&q=80',
-    description: '100% pure squeezed orange juice.',
-    rating: 4.4,
-    isFeatured: false,
-    isHidden: true, // Hidden by admin
-    isApproved: true
-  }
-];
+// Helper to fire events to re-render React components
+const notifyUpdate = () => {
+  window.dispatchEvent(new Event('adminDataUpdated'));
+};
 
-const initialOrders = [
-  {
-    _id: 'o1',
-    customerSnapshot: {
-      name: 'John Doe',
-      email: 'john.doe@example.com',
-      phone: '+1 555-0199'
-    },
-    orderItems: [
-      { product: 'p1', productName: 'Organic Bananas', productImage: 'https://images.unsplash.com/photo-1571501443621-e0166a41f861?auto=format&fit=crop&w=400&q=80', sellerName: 'Fresh Farms Ltd', price: 4.99, quantity: 2 },
-      { product: 'p3', productName: 'Whole Milk 1L', productImage: 'https://images.unsplash.com/photo-1563636619-e9143da7973b?auto=format&fit=crop&w=400&q=80', sellerName: 'Green Valley Organics', price: 2.99, quantity: 3 }
-    ],
-    shippingAddress: {
-      fullName: 'John Doe',
-      phone: '+1 555-0199',
-      address: '123 Main St',
-      city: 'New York',
-      pinCode: '10001',
-      landmark: 'Near Central Park'
-    },
-    paymentMethod: 'CARD',
-    paymentStatus: 'Paid',
-    orderStatus: 'Delivered',
-    itemsPrice: 18.95,
-    taxPrice: 0.95,
-    deliveryPrice: 40.00,
-    totalPrice: 59.90,
-    createdAt: '2026-05-18T10:15:00Z'
-  },
-  {
-    _id: 'o2',
-    customerSnapshot: {
-      name: 'Jane Smith',
-      email: 'jane.smith@example.com',
-      phone: '+1 555-0145'
-    },
-    orderItems: [
-      { product: 'p2', productName: 'Fresh Avocados', productImage: 'https://images.unsplash.com/photo-1523049673857-eb18f1d7b578?auto=format&fit=crop&w=400&q=80', sellerName: 'Green Valley Organics', price: 6.50, quantity: 5 }
-    ],
-    shippingAddress: {
-      fullName: 'Jane Smith',
-      phone: '+1 555-0145',
-      address: '456 Oak Ave',
-      city: 'Los Angeles',
-      pinCode: '90001',
-      landmark: 'Apt 4B'
-    },
-    paymentMethod: 'UPI',
-    paymentStatus: 'Paid',
-    orderStatus: 'Processing',
-    itemsPrice: 32.50,
-    taxPrice: 1.63,
-    deliveryPrice: 40.00,
-    totalPrice: 74.13,
-    createdAt: '2026-05-19T14:40:00Z'
-  },
-  {
-    _id: 'o3',
-    customerSnapshot: {
-      name: 'Emily Brown',
-      email: 'emily.b@example.com',
-      phone: '+1 555-0122'
-    },
-    orderItems: [
-      { product: 'p5', productName: 'Organic Spinach', productImage: 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?auto=format&fit=crop&w=400&q=80', sellerName: 'Green Valley Organics', price: 3.50, quantity: 2 }
-    ],
-    shippingAddress: {
-      fullName: 'Emily Brown',
-      phone: '+1 555-0122',
-      address: '321 Elm St',
-      city: 'Seattle',
-      pinCode: '98101',
-      landmark: ''
-    },
-    paymentMethod: 'COD',
-    paymentStatus: 'Pending',
-    orderStatus: 'Placed',
-    itemsPrice: 7.00,
-    taxPrice: 0.35,
-    deliveryPrice: 40.00,
-    totalPrice: 47.35,
-    createdAt: '2026-05-20T01:10:00Z'
-  }
-];
+// Async background fetcher
+const fetchFromBackend = async (key) => {
+  try {
+    let endpoint = `${API_BASE}/${key}`;
 
-const initialCategories = [
-  { id: 1, name: 'Fruits', image: 'https://images.unsplash.com/photo-1610832958506-aa56368176cf?auto=format&fit=crop&w=300&q=80' },
-  { id: 2, name: 'Vegetables', image: 'https://images.unsplash.com/photo-1566385101042-1a0aa0c1268c?auto=format&fit=crop&w=300&q=80' },
-  { id: 3, name: 'Dairy', image: 'https://images.unsplash.com/photo-1628088062854-d1870b4553da?auto=format&fit=crop&w=300&q=80' },
-  { id: 4, name: 'Seafood', image: 'https://images.unsplash.com/photo-1615141982883-c7ad0e69fd62?auto=format&fit=crop&w=300&q=80' },
-  { id: 5, name: 'Snacks', image: 'https://images.unsplash.com/photo-1621939514649-280e2ee25f60?auto=format&fit=crop&w=300&q=80' },
-  { id: 6, name: 'Beverages', image: 'https://images.unsplash.com/photo-1527661591475-527312dd65f5?auto=format&fit=crop&w=300&q=80' }
-];
+    const response = await fetch(endpoint, {
+      method: 'GET',
+      headers: getAdminHeaders(),
+      credentials: 'include'
+    });
 
-const initialCoupons = [
-  { id: 1, code: 'SAVE20', discountType: 'percentage', discountValue: 20, minOrderAmount: 200, usageLimit: 50, usedCount: 14, expiryDate: '2026-07-31' },
-  { id: 2, code: 'FIRSTORDER', discountType: 'flat', discountValue: 50, minOrderAmount: 300, usageLimit: 100, usedCount: 42, expiryDate: '2026-06-30' },
-  { id: 3, code: 'FREEDELIVERY', discountType: 'percentage', discountValue: 100, minOrderAmount: 150, usageLimit: 500, usedCount: 124, expiryDate: '2026-12-31' }
-];
-
-const initialPayments = [
-  { id: 'PAY-001', orderId: 'o1', customer: 'John Doe', amount: 59.90, paymentMethod: 'CARD', status: 'Success', createdAt: '2026-05-18T10:16:00Z' },
-  { id: 'PAY-002', orderId: 'o2', customer: 'Jane Smith', amount: 74.13, paymentMethod: 'UPI', status: 'Success', createdAt: '2026-05-19T14:41:00Z' },
-  { id: 'PAY-003', orderId: 'o3', customer: 'Emily Brown', amount: 47.35, paymentMethod: 'COD', status: 'Success', createdAt: '2026-05-20T01:10:00Z' }
-];
-
-const initialNotifications = [
-  { id: 1, title: 'Summer Festival Sale!', message: 'Use code SAVE20 to get flat 20% off on all organic fruits & fresh dairy goods this weekend.', type: 'promotional', createdAt: '2026-05-19T09:00:00Z', status: 'Active' },
-  { id: 2, title: 'Server Upgrade Scheduled', message: 'We will be conducting a routine server maintenance window on May 24th from 2:00 AM to 4:00 AM UTC.', type: 'alert', createdAt: '2026-05-15T12:00:00Z', status: 'Active' },
-  { id: 3, title: 'Free Delivery Threshold Reduced', message: 'Spend above $150 and enjoy free doorstep deliveries. Use code FREEDELIVERY today!', type: 'offer', createdAt: '2026-05-10T08:00:00Z', status: 'Expired' }
-];
-
-const initialSettings = {
-  websiteName: 'White Ocean E-Commerce',
-  deliveryCharge: 40,
-  freeDeliveryMin: 500,
-  taxPercentage: 5,
-  contactEmail: 'support@whiteocean.com',
-  contactPhone: '+1 (800) 555-GROCERY',
-  banners: [
-    'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1200&q=80',
-    'https://images.unsplash.com/photo-1608686207856-001b95cf60ca?auto=format&fit=crop&w=1200&q=80'
-  ],
-  footerSettings: {
-    copyright: '© 2026 White Ocean E-Commerce. All rights reserved.',
-    facebook: 'https://facebook.com/whiteocean',
-    twitter: 'https://twitter.com/whiteocean',
-    instagram: 'https://instagram.com/whiteocean'
+    const resData = await response.json();
+    if (resData.success) {
+      localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(resData.data));
+      notifyUpdate();
+    }
+  } catch (error) {
+    console.error(`Error syncing ${key} with backend:`, error);
   }
 };
 
-// LocalStorage Helper functions
+// Fetch dashboard analytics from backend
+const fetchAnalyticsFromBackend = async () => {
+  try {
+    const response = await fetch(`${API_BASE}/analytics`, {
+      method: 'GET',
+      headers: getAdminHeaders(),
+      credentials: 'include'
+    });
+    const resData = await response.json();
+    if (resData.success) {
+      localStorage.setItem(STORAGE_PREFIX + 'analytics', JSON.stringify(resData.data));
+      notifyUpdate();
+    }
+  } catch (error) {
+    console.error('Error fetching analytics:', error);
+  }
+};
+
+// Sync all database collections on load
+let hasSynced = false;
+export const triggerBackendSync = () => {
+  if (hasSynced) return;
+  hasSynced = true;
+  // Auto-reset after 5 seconds so next admin page navigation re-syncs
+  setTimeout(() => { hasSynced = false; }, 5000);
+
+  // Background fetch
+  fetchAnalyticsFromBackend();
+  fetchFromBackend('users');
+  fetchFromBackend('vendors');
+  fetchFromBackend('products');
+  fetchFromBackend('coupons');
+  fetchFromBackend('notifications');
+  fetchFromBackend('orders');
+  fetchFromBackend('payments');
+  fetchFromBackend('settings');
+};
+
+// Start sync automatically
+if (typeof window !== 'undefined') {
+  setTimeout(triggerBackendSync, 1000);
+}
+
+// ── GET ADMIN DATA (Cached synchronously for React) ──────────
 export const getAdminData = (key) => {
-  try {
-    const fullKey = STORAGE_PREFIX + key;
-    const value = localStorage.getItem(fullKey);
-    if (value !== null) {
-      return JSON.parse(value);
-    }
-    
-    // Fallbacks to initial state if not found
-    let initialValue;
-    switch (key) {
-      case 'users': initialValue = initialUsers; break;
-      case 'vendors': initialValue = initialVendors; break;
-      case 'products': initialValue = initialProducts; break;
-      case 'orders': initialValue = initialOrders; break;
-      case 'categories': initialValue = initialCategories; break;
-      case 'coupons': initialValue = initialCoupons; break;
-      case 'payments': initialValue = initialPayments; break;
-      case 'notifications': initialValue = initialNotifications; break;
-      case 'settings': initialValue = initialSettings; break;
-      default: initialValue = null;
-    }
-    
-    if (initialValue !== null) {
-      localStorage.setItem(fullKey, JSON.stringify(initialValue));
-    }
-    return initialValue;
-  } catch (error) {
-    console.error('Failed to read admin data from localStorage:', error);
-    return null;
+  // Auto-sync in background on access
+  if (typeof window !== 'undefined') {
+    setTimeout(() => {
+      if (key === 'analytics') fetchAnalyticsFromBackend();
+      else fetchFromBackend(key);
+    }, 100);
   }
+
+  const fullKey = STORAGE_PREFIX + key;
+  const value = localStorage.getItem(fullKey);
+  if (value !== null) {
+    return JSON.parse(value);
+  }
+
+  // Initial fallbacks if cache is empty
+  let initialValue = [];
+  if (key === 'users') initialValue = initialUsers;
+  else if (key === 'vendors') initialValue = initialVendors;
+  else if (key === 'categories') {
+    initialValue = [
+      { id: 1, name: 'Fruits', image: 'https://images.unsplash.com/photo-1610832958506-aa56368176cf?auto=format&fit=crop&w=300&q=80' },
+      { id: 2, name: 'Vegetables', image: 'https://images.unsplash.com/photo-1566385101042-1a0aa0c1268c?auto=format&fit=crop&w=300&q=80' },
+      { id: 3, name: 'Dairy', image: 'https://images.unsplash.com/photo-1628088062854-d1870b4553da?auto=format&fit=crop&w=300&q=80' },
+      { id: 4, name: 'Seafood', image: 'https://images.unsplash.com/photo-1615141982883-c7ad0e69fd62?auto=format&fit=crop&w=300&q=80' },
+      { id: 5, name: 'Snacks', image: 'https://images.unsplash.com/photo-1621939514649-280e2ee25f60?auto=format&fit=crop&w=300&q=80' },
+      { id: 6, name: 'Beverages', image: 'https://images.unsplash.com/photo-1527661591475-527312dd65f5?auto=format&fit=crop&w=300&q=80' }
+    ];
+  } else if (key === 'settings') {
+    initialValue = {
+      websiteName: 'White Ocean E-Commerce',
+      deliveryCharge: 40,
+      freeDeliveryMin: 500,
+      taxPercentage: 5,
+      contactEmail: 'support@whiteocean.com',
+      contactPhone: '+1 (800) 555-GROCERY',
+      banners: [
+        'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1200&q=80',
+        'https://images.unsplash.com/photo-1608686207856-001b95cf60ca?auto=format&fit=crop&w=1200&q=80'
+      ]
+    };
+  }
+
+  localStorage.setItem(fullKey, JSON.stringify(initialValue));
+  return initialValue;
 };
 
-export const setAdminData = (key, data) => {
+// ── SET ADMIN DATA (Persist locally & push to Express Backend) 
+export const setAdminData = async (key, data) => {
+  const fullKey = STORAGE_PREFIX + key;
+  localStorage.setItem(fullKey, JSON.stringify(data));
+  notifyUpdate();
+
+  // Find what changed and update backend
   try {
-    const fullKey = STORAGE_PREFIX + key;
-    localStorage.setItem(fullKey, JSON.stringify(data));
-    return true;
+    if (key === 'users') {
+      // Find blocked/active updates
+      for (const user of data) {
+        if (user._id && !user._id.toString().startsWith('u')) {
+          await fetch(`${API_BASE}/users/${user._id}/status`, {
+            method: 'PUT',
+            headers: getAdminHeaders(),
+            credentials: 'include',
+            body: JSON.stringify({ status: user.status })
+          });
+        }
+      }
+    } else if (key === 'vendors') {
+      // Find vendor approvals/suspensions
+      for (const vendor of data) {
+        if (vendor._id && !vendor._id.toString().startsWith('v')) {
+          await fetch(`${API_BASE}/vendors/${vendor._id}/status`, {
+            method: 'PUT',
+            headers: getAdminHeaders(),
+            credentials: 'include',
+            body: JSON.stringify({ status: vendor.status })
+          });
+        }
+      }
+    } else if (key === 'products') {
+      // Find product updates (approval, hide)
+      for (const product of data) {
+        if (product._id && !product._id.toString().startsWith('p')) {
+          await fetch(`${API_BASE}/products/${product._id}/approval`, {
+            method: 'PUT',
+            headers: getAdminHeaders(),
+            credentials: 'include',
+            body: JSON.stringify({ isApproved: product.isApproved })
+          });
+          await fetch(`${API_BASE}/products/${product._id}/hide`, {
+            method: 'PUT',
+            headers: getAdminHeaders(),
+            credentials: 'include',
+            body: JSON.stringify({ isHidden: product.isHidden })
+          });
+        }
+      }
+    } else if (key === 'coupons') {
+      // Full Coupon CRUD
+      const currentDbCoupons = await (await fetch(`${API_BASE}/coupons`, { headers: getAdminHeaders(), credentials: 'include' })).json();
+      if (currentDbCoupons.success) {
+        const dbIds = currentDbCoupons.data.map(c => c._id.toString());
+        const localIds = data.map(c => c._id ? c._id.toString() : '');
+
+        // 1. Create or Update Coupons
+        for (const localCoupon of data) {
+          if (!localCoupon._id || localCoupon._id.toString().startsWith('mock_') || !dbIds.includes(localCoupon._id.toString())) {
+            const cleanCoupon = { ...localCoupon };
+            if (cleanCoupon._id && cleanCoupon._id.toString().startsWith('mock_')) delete cleanCoupon._id;
+
+            await fetch(`${API_BASE}/coupons`, {
+              method: 'POST',
+              headers: getAdminHeaders(),
+              credentials: 'include',
+              body: JSON.stringify(cleanCoupon)
+            });
+          } else {
+            // Update
+            await fetch(`${API_BASE}/coupons/${localCoupon._id}`, {
+              method: 'PUT',
+              headers: getAdminHeaders(),
+              credentials: 'include',
+              body: JSON.stringify(localCoupon)
+            });
+          }
+        }
+
+        // 2. Delete removed Coupons
+        for (const dbCoupon of currentDbCoupons.data) {
+          if (!localIds.includes(dbCoupon._id.toString())) {
+            await fetch(`${API_BASE}/coupons/${dbCoupon._id}`, {
+              method: 'DELETE',
+              headers: getAdminHeaders(),
+              credentials: 'include'
+            });
+          }
+        }
+      }
+    } else if (key === 'orders') {
+      // Find order status updates
+      for (const order of data) {
+        if (order._id && !order._id.toString().startsWith('o')) {
+          await fetch(`${API_BASE}/orders/${order._id}/status`, {
+            method: 'PUT',
+            headers: getAdminHeaders(),
+            credentials: 'include',
+            body: JSON.stringify({ orderStatus: order.orderStatus })
+          });
+        }
+      }
+    } else if (key === 'settings') {
+      // Sync settings update to backend
+      await fetch(`${API_BASE}/settings`, {
+        method: 'PUT',
+        headers: getAdminHeaders(),
+        credentials: 'include',
+        body: JSON.stringify(data)
+      });
+    } else if (key === 'notifications') {
+      // Full Notification CRUD
+      const currentDbNotifications = await (await fetch(`${API_BASE}/notifications`, { headers: getAdminHeaders(), credentials: 'include' })).json();
+      if (currentDbNotifications.success) {
+        const dbIds = currentDbNotifications.data.map(n => n._id.toString());
+        const localIds = data.map(n => n._id ? n._id.toString() : '');
+
+        // 1. Create or Update Notifications
+        for (const localNotif of data) {
+          if (!localNotif._id || localNotif._id.toString().startsWith('mock_') || !dbIds.includes(localNotif._id.toString())) {
+            const cleanNotif = { ...localNotif };
+            if (cleanNotif._id && cleanNotif._id.toString().startsWith('mock_')) delete cleanNotif._id;
+
+            await fetch(`${API_BASE}/notifications`, {
+              method: 'POST',
+              headers: getAdminHeaders(),
+              credentials: 'include',
+              body: JSON.stringify(cleanNotif)
+            });
+          } else {
+            // Update status (Active/Expired)
+            await fetch(`${API_BASE}/notifications/${localNotif._id}/status`, {
+              method: 'PUT',
+              headers: getAdminHeaders(),
+              credentials: 'include',
+              body: JSON.stringify({ status: localNotif.status })
+            });
+          }
+        }
+
+        // 2. Delete removed Notifications
+        for (const dbNotif of currentDbNotifications.data) {
+          if (!localIds.includes(dbNotif._id.toString())) {
+            await fetch(`${API_BASE}/notifications/${dbNotif._id}`, {
+              method: 'DELETE',
+              headers: getAdminHeaders(),
+              credentials: 'include'
+            });
+          }
+        }
+      }
+    }
   } catch (error) {
-    console.error('Failed to write admin data to localStorage:', error);
-    return false;
+    console.error(`Error updating backend for ${key}:`, error);
   }
+
+  return true;
 };
 
-// Extra analytics calculations helper
+// ── GET ANALYTICS ─────────────────────────────────────────────
 export const getAnalytics = () => {
-  const users = getAdminData('users') || [];
-  const vendors = getAdminData('vendors') || [];
-  const products = getAdminData('products') || [];
-  const orders = getAdminData('orders') || [];
-  
-  const totalRevenue = orders
-    .filter(o => o.orderStatus !== 'Cancelled')
-    .reduce((sum, o) => sum + o.totalPrice, 0);
-  
-  const pendingOrders = orders.filter(o => o.orderStatus === 'Placed' || o.orderStatus === 'Processing' || o.orderStatus === 'Packed').length;
-  const deliveredOrders = orders.filter(o => o.orderStatus === 'Delivered').length;
-  const lowStockProducts = products.filter(p => p.stockQuantity < 10).length;
+  const fullKey = STORAGE_PREFIX + 'analytics';
+  const value = localStorage.getItem(fullKey);
+  if (value !== null) {
+    return JSON.parse(value);
+  }
 
+  // Fallback initial object
   return {
-    totalUsers: users.length,
-    totalVendors: vendors.length,
-    totalProducts: products.length,
-    totalOrders: orders.length,
-    totalRevenue: parseFloat(totalRevenue.toFixed(2)),
-    pendingOrders,
-    deliveredOrders,
-    lowStockProducts
+    totalUsers: 0,
+    totalVendors: 0,
+    totalProducts: 0,
+    totalOrders: 0,
+    totalRevenue: 0,
+    pendingOrders: 0,
+    deliveredOrders: 0,
+    lowStockProducts: 0
   };
 };

@@ -33,17 +33,12 @@ import AdminNotifications from './pages/admin/AdminNotifications';
 import AdminSettings from './pages/admin/AdminSettings';
 import AdminAnalytics from './pages/admin/AdminAnalytics';
 
-const Vendors = () => (
-  <div className="container py-20">
-    <h1>Vendors</h1>
-  </div>
-);
-
-const VendorDashboard = () => (
-  <div className="container py-20">
-    <h1>Vendor Dashboard</h1>
-  </div>
-);
+import VendorDashboard from './pages/VendorDashboard';
+import Vendors from './pages/Vendors';
+import VendorShop from './pages/VendorShop';
+import BecomeVendor from './pages/BecomeVendor';
+import Terms from './pages/Terms';
+import Privacy from './pages/Privacy';
 
 const NotFound = () => (
   <div className="container py-20 text-center">
@@ -79,7 +74,11 @@ function App() {
           <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path="/vendors" element={<Vendors />} />
+          <Route path="/vendor/shop/:id" element={<VendorShop />} />
+          <Route path="/become-vendor" element={<ProtectedRoute><BecomeVendor /></ProtectedRoute>} />
           <Route path="/vendor/dashboard" element={<ProtectedRoute><VendorDashboard /></ProtectedRoute>} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/privacy" element={<Privacy />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
 

@@ -29,6 +29,12 @@ const AdminCoupons = () => {
 
   useEffect(() => {
     setCoupons(getAdminData('coupons') || []);
+
+    const handleUpdate = () => {
+      setCoupons(getAdminData('coupons') || []);
+    };
+    window.addEventListener('adminDataUpdated', handleUpdate);
+    return () => window.removeEventListener('adminDataUpdated', handleUpdate);
   }, []);
 
   const filteredCoupons = coupons.filter(c => 
@@ -39,7 +45,7 @@ const AdminCoupons = () => {
     const confirm = window.confirm("Are you sure you want to deactivate and remove this coupon code?");
     if (!confirm) return;
 
-    const updated = coupons.filter(c => c.id !== couponId);
+    const updated = coupons.filter(c => c._id !== couponId && c.id !== couponId);
     setCoupons(updated);
     setAdminData('coupons', updated);
   };
@@ -48,6 +54,7 @@ const AdminCoupons = () => {
     e.preventDefault();
     const createdCoupon = {
       ...newCoupon,
+      _id: 'mock_' + Date.now(),
       id: Date.now(),
       discountValue: parseFloat(newCoupon.discountValue),
       minOrderAmount: parseFloat(newCoupon.minOrderAmount),
@@ -117,7 +124,7 @@ const AdminCoupons = () => {
                   const isExpired = new Date(c.expiryDate) < new Date();
                   const isExceeded = c.usedCount >= c.usageLimit;
                   return (
-                    <tr key={c.id}>
+                    <tr key={c._id || c.id}>
                       <td>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                           <div className="bg-primary-glow" style={{ padding: '0.6rem', borderRadius: '10px' }}>
@@ -125,7 +132,7 @@ const AdminCoupons = () => {
                           </div>
                           <div>
                             <div className="admin-cell-title" style={{ fontFamily: 'monospace', letterSpacing: '0.5px', fontSize: '1rem', color: 'var(--admin-color-primary)' }}>{c.code}</div>
-                            <div className="admin-cell-subtitle">Ref ID: {c.id}</div>
+                            <div className="admin-cell-subtitle">Ref ID: {c._id || c.id}</div>
                           </div>
                         </div>
                       </td>
@@ -152,7 +159,7 @@ const AdminCoupons = () => {
                       <td>
                         <button 
                           className="admin-btn admin-btn-danger admin-btn-sm admin-btn-icon"
-                          onClick={() => handleDeleteClick(c.id)}
+                          onClick={() => handleDeleteClick(c._id || c.id)}
                           title="Purge Coupon"
                         >
                           <Trash2 size={14} />

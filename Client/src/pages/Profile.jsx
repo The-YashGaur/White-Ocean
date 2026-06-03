@@ -17,7 +17,12 @@ import {
   Shield,
   ChevronRight,
   Package,
-  Star
+  Star,
+  ChevronLeft,
+  Truck,
+  CheckCircle2,
+  Clock,
+  ArrowLeft
 } from 'lucide-react';
 import Button from '../components/ui/Button';
 import useAuthStore from '../store/authStore';
@@ -28,6 +33,7 @@ const Profile = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({});
+  const [selectedOrder, setSelectedOrder] = useState(null);
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
 
@@ -372,7 +378,7 @@ const Profile = () => {
             <p>No orders yet.</p>
           ) : (
             recentOrders.map((order) => (
-              <div key={order._id} className="order-item">
+              <div key={order._id} className="order-item" onClick={() => { setActiveTab('orders'); setSelectedOrder(order); }} style={{ cursor: 'pointer' }}>
                 <div className="order-info">
                   <h4>{formatOrderId(order._id)}</h4>
                   <p>
@@ -525,44 +531,234 @@ const Profile = () => {
     </motion.div>
   );
 
+  const renderOrderDetailView = () => {
+    if (!selectedOrder) return null;
+
+    const statusSteps = ['Placed', 'Processing', 'Packed', 'Out for Delivery', 'Delivered'];
+    const currentStatusIndex = statusSteps.indexOf(selectedOrder.orderStatus);
+    const isCancelled = selectedOrder.orderStatus === 'Cancelled';
+
+    return (
+      <div className="order-detail-view" style={{ animation: 'fadeIn 0.3s ease' }}>
+        <button 
+          className="back-to-orders-btn" 
+          onClick={() => setSelectedOrder(null)}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            background: 'none',
+            border: 'none',
+            color: 'var(--color-primary)',
+            fontWeight: 600,
+            cursor: 'pointer',
+            padding: 0,
+            marginBottom: '1.5rem',
+            fontSize: '1rem'
+          }}
+        >
+          <ArrowLeft size={18} /> Back to Orders
+        </button>
+
+        <div className="order-detail-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem' }}>
+          <div>
+            <h3 style={{ fontSize: '1.8rem', fontWeight: 700, margin: 0, color: 'var(--color-text-dark)' }}>Order Detail</h3>
+            <p style={{ color: 'var(--color-text-gray)', margin: '0.25rem 0 0 0' }}>ID: <code style={{ fontSize: '0.95rem' }}>{selectedOrder._id}</code></p>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <span className={`status ${getStatusColor(selectedOrder.orderStatus)}`} style={{ display: 'inline-block', padding: '0.35rem 1rem', borderRadius: '50px', fontSize: '0.85rem', fontWeight: 600 }}>
+              {selectedOrder.orderStatus}
+            </span>
+            <p style={{ color: 'var(--color-text-gray)', margin: '0.5rem 0 0 0', fontSize: '0.9rem' }}>Ordered on {formatDate(selectedOrder.createdAt)}</p>
+          </div>
+        </div>
+
+        {/* Cancelled Alert Banner */}
+        {isCancelled && (
+          <div style={{ display: 'flex', gap: '1rem', background: '#fef2f2', border: '1px solid #fee2e2', borderRadius: '16px', padding: '1.25rem', marginBottom: '2rem', alignItems: 'center' }}>
+            <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: '#fee2e2', display: 'flex', justifyContent: 'center', alignItems: 'center', flexShrink: 0 }}>
+              <X size={22} color="#dc2626" />
+            </div>
+            <div>
+              <h4 style={{ margin: 0, color: '#dc2626', fontSize: '1.05rem', fontWeight: 600 }}>Order Cancelled</h4>
+              <p style={{ margin: '0.2rem 0 0 0', color: '#7f1d1d', fontSize: '0.9rem', lineHeight: 1.5 }}>This order has been cancelled and will not be processed further. If payment was collected, it will be refunded shortly.</p>
+            </div>
+          </div>
+        )}
+
+        {/* Visual order timeline */}
+        {!isCancelled && (
+          <div className="tracking-timeline-card" style={{ background: '#fff', border: '1px solid #f1f5f9', borderRadius: '20px', padding: '1.5rem 2rem', marginBottom: '2.5rem', boxShadow: 'var(--shadow-sm)' }}>
+            <h4 style={{ margin: '0 0 1.5rem 0', fontSize: '1.15rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Truck size={18} color="var(--color-primary)" /> Visual Tracking Timeline
+            </h4>
+            <div className="timeline-steps-container">
+              {statusSteps.map((step, idx) => {
+                const isCompleted = idx <= currentStatusIndex;
+                const isActive = idx === currentStatusIndex;
+
+                let StepIcon = Package;
+                if (step === 'Placed') StepIcon = ShoppingBag;
+                if (step === 'Processing') StepIcon = Clock;
+                if (step === 'Packed') StepIcon = Package;
+                if (step === 'Out for Delivery') StepIcon = Truck;
+                if (step === 'Delivered') StepIcon = CheckCircle2;
+
+                return (
+                  <div key={step} className={`timeline-step-item ${isCompleted ? 'completed' : ''} ${isActive ? 'active' : ''}`}>
+                    <div className="step-badge">
+                      <StepIcon size={18} />
+                    </div>
+                    <div className="step-label">{step}</div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Invoice and Address Details Grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr', gap: '2rem', alignItems: 'start' }} className="order-grid-layout">
+          
+          {/* Order Items Listing */}
+          <div style={{ background: '#fff', border: '1px solid #f1f5f9', borderRadius: '20px', padding: '1.5rem', boxShadow: 'var(--shadow-sm)' }}>
+            <h4 style={{ margin: '0 0 1.25rem 0', fontSize: '1.15rem', fontWeight: 600 }}>Items in Order</h4>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              {selectedOrder.orderItems?.map((item, idx) => (
+                <div key={idx} className="detail-order-item" style={{ paddingBottom: idx < selectedOrder.orderItems.length - 1 ? '1.25rem' : '0', borderBottom: idx < selectedOrder.orderItems.length - 1 ? '1px solid #f1f5f9' : 'none' }}>
+                  <img
+                    src={item.productImage.startsWith('/uploads') ? `http://localhost:8000${item.productImage}` : item.productImage}
+                    alt={item.productName}
+                    className="detail-order-item-img"
+                  />
+                  <div className="detail-order-item-info">
+                    <h5 style={{ margin: 0, fontSize: '1rem', fontWeight: 600, color: 'var(--color-text-dark)' }}>{item.productName}</h5>
+                    <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.85rem', color: 'var(--color-text-gray)' }}>Seller: <span style={{ fontWeight: 500 }}>{item.sellerName}</span></p>
+                    <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.9rem', fontWeight: 500 }}>₹{item.price} × {item.quantity}</p>
+                  </div>
+                  <div className="detail-order-item-price">
+                    ₹{Number(item.price * item.quantity).toFixed(2)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Shipping Info + Invoice Summary */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            
+            {/* Delivery address card */}
+            <div style={{ background: '#fff', border: '1px solid #f1f5f9', borderRadius: '20px', padding: '1.5rem', boxShadow: 'var(--shadow-sm)' }}>
+              <h4 style={{ margin: '0 0 1rem 0', fontSize: '1.1rem', fontWeight: 600 }}>Delivery Information</h4>
+              {selectedOrder.shippingAddress ? (
+                <div style={{ fontSize: '0.925rem', lineHeight: 1.6, color: 'var(--color-text-dark)' }}>
+                  <p style={{ fontWeight: 600, margin: '0 0 0.5rem 0', fontSize: '1rem' }}>{selectedOrder.shippingAddress.fullName}</p>
+                  <p style={{ margin: '0 0 0.25rem 0' }}>{selectedOrder.shippingAddress.address}</p>
+                  <p style={{ margin: '0 0 0.5rem 0' }}>{selectedOrder.shippingAddress.city} - {selectedOrder.shippingAddress.pinCode}</p>
+                  <p style={{ margin: 0, fontWeight: 500, color: 'var(--color-text-gray)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                    📞 {selectedOrder.shippingAddress.phone}
+                  </p>
+                </div>
+              ) : (
+                <p style={{ margin: 0, color: 'var(--color-text-gray)' }}>No shipping details found.</p>
+              )}
+            </div>
+
+            {/* Payment Summary */}
+            <div style={{ background: '#fff', border: '1px solid #f1f5f9', borderRadius: '20px', padding: '1.5rem', boxShadow: 'var(--shadow-sm)' }}>
+              <h4 style={{ margin: '0 0 1rem 0', fontSize: '1.1rem', fontWeight: 600 }}>Payment Method</h4>
+              <p style={{ margin: 0, fontSize: '0.95rem', fontWeight: 600, color: 'var(--color-text-dark)' }}>
+                {selectedOrder.paymentMethod === 'COD' ? 'Cash on Delivery (COD)' : selectedOrder.paymentMethod}
+              </p>
+              <div style={{ marginTop: '0.5rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.25rem 0.75rem', borderRadius: '50px', background: selectedOrder.paymentStatus === 'Paid' ? '#f0fdf4' : '#fffbc6', border: '1px solid ' + (selectedOrder.paymentStatus === 'Paid' ? '#bbf7d0' : '#fef08a') }}>
+                <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: selectedOrder.paymentStatus === 'Paid' ? '#22c55e' : '#eab308' }} />
+                <span style={{ fontSize: '0.8rem', fontWeight: 600, color: selectedOrder.paymentStatus === 'Paid' ? '#166534' : '#854d0e' }}>
+                  {selectedOrder.paymentStatus}
+                </span>
+              </div>
+            </div>
+
+            {/* Invoice summary card */}
+            <div style={{ background: '#fff', border: '1px solid #f1f5f9', borderRadius: '20px', padding: '1.5rem', boxShadow: 'var(--shadow-sm)' }}>
+              <h4 style={{ margin: '0 0 1.25rem 0', fontSize: '1.1rem', fontWeight: 600 }}>Billing Summary</h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', fontSize: '0.925rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--color-text-gray)' }}>
+                  <span>Items Subtotal</span>
+                  <span>₹{Number(selectedOrder.itemsPrice || selectedOrder.totalPrice).toFixed(2)}</span>
+                </div>
+                {selectedOrder.discountPrice > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', color: '#22c55e', fontWeight: 500 }}>
+                    <span>Coupon Discount ({selectedOrder.couponCode})</span>
+                    <span>-₹{Number(selectedOrder.discountPrice).toFixed(2)}</span>
+                  </div>
+                )}
+                <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--color-text-gray)' }}>
+                  <span>Delivery Charge</span>
+                  <span>₹{Number(selectedOrder.deliveryPrice || 0).toFixed(2)}</span>
+                </div>
+                <hr style={{ border: 'none', borderTop: '1px solid #f1f5f9', margin: '0.5rem 0' }} />
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: '1.15rem', color: 'var(--color-text-dark)' }}>
+                  <span>Grand Total</span>
+                  <span>₹{Number(selectedOrder.totalPrice).toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const renderOrders = () => (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className="orders-section"
     >
-      <h3>Order History</h3>
-
-      {ordersLoading ? (
-        <p>Loading orders...</p>
-      ) : orders.length === 0 ? (
-        <p>No orders found. Start shopping to place your first order.</p>
+      {selectedOrder ? (
+        renderOrderDetailView()
       ) : (
-        <div className="orders-table">
-          <div className="table-header">
-            <span>Order ID</span>
-            <span>Date</span>
-            <span>Items</span>
-            <span>Total</span>
-            <span>Status</span>
-            <span>Payment</span>
-          </div>
+        <>
+          <h3>Order History</h3>
 
-          {orders.map((order) => (
-            <div key={order._id} className="table-row">
-              <span className="order-id">{formatOrderId(order._id)}</span>
-              <span>{formatDate(order.createdAt)}</span>
-              <span>{getOrderItemsCount(order)} items</span>
-              <span className="amount">₹{Number(order.totalPrice || 0).toFixed(2)}</span>
-              <span className={`status ${getStatusColor(order.orderStatus)}`}>
-                {order.orderStatus}
-              </span>
-              <span>
-                {order.paymentMethod} / {order.paymentStatus}
-              </span>
+          {ordersLoading ? (
+            <p>Loading orders...</p>
+          ) : orders.length === 0 ? (
+            <p>No orders found. Start shopping to place your first order.</p>
+          ) : (
+            <div className="orders-table">
+              <div className="table-header">
+                <span>Order ID</span>
+                <span>Date</span>
+                <span>Items</span>
+                <span>Total</span>
+                <span>Status</span>
+                <span>Payment</span>
+              </div>
+
+              {orders.map((order) => (
+                <div 
+                  key={order._id} 
+                  className="table-row clickable" 
+                  onClick={() => setSelectedOrder(order)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <span className="order-id">{formatOrderId(order._id)}</span>
+                  <span>{formatDate(order.createdAt)}</span>
+                  <span>{getOrderItemsCount(order)} items</span>
+                  <span className="amount">₹{Number(order.totalPrice || 0).toFixed(2)}</span>
+                  <span className={`status ${getStatusColor(order.orderStatus)}`}>
+                    {order.orderStatus}
+                  </span>
+                  <span>
+                    {order.paymentMethod} / {order.paymentStatus}
+                  </span>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          )}
+        </>
       )}
     </motion.div>
   );

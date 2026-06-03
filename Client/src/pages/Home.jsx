@@ -9,11 +9,37 @@ import useProductStore from '../store/productStore';
 import './Home.css';
 
 const Home = () => {
-  const { featuredProducts, isLoading, fetchFeaturedProducts } = useProductStore();
+  const { featuredProducts, isLoading, fetchFeaturedProducts, fetchSettings } = useProductStore();
+
+  const [banners, setBanners] = React.useState([
+    'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=800&q=80'
+  ]);
+  const [currentBannerIndex, setCurrentBannerIndex] = React.useState(0);
+  const [websiteName, setWebsiteName] = React.useState('White Ocean E-Commerce');
 
   useEffect(() => {
     fetchFeaturedProducts();
-  }, [fetchFeaturedProducts]);
+    const loadSettings = async () => {
+      const s = await fetchSettings();
+      if (s) {
+        if (s.banners && s.banners.length > 0) {
+          setBanners(s.banners);
+        }
+        if (s.websiteName) {
+          setWebsiteName(s.websiteName);
+        }
+      }
+    };
+    loadSettings();
+  }, [fetchFeaturedProducts, fetchSettings]);
+
+  useEffect(() => {
+    if (banners.length <= 1) return;
+    const interval = setInterval(() => {
+      setCurrentBannerIndex((prev) => (prev + 1) % banners.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [banners]);
 
   return (
     <div className="home-page">
@@ -27,8 +53,8 @@ const Home = () => {
             transition={{ duration: 0.6 }}
           >
             <h1 className="hero-title">
-              Fresh Groceries <br />
-              <span className="text-primary">Delivered to You</span>
+              {websiteName.split(' ')[0]} <br />
+              <span className="text-primary">{websiteName.split(' ').slice(1).join(' ') || 'Groceries'}</span>
             </h1>
 
             <p className="hero-subtitle">
@@ -56,10 +82,14 @@ const Home = () => {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            <img
-              src="https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=800&q=80"
-              alt="Fresh Groceries"
+            <motion.img
+              key={currentBannerIndex}
+              src={banners[currentBannerIndex]}
+              alt="Fresh Groceries Banner"
               className="hero-image"
+              initial={{ opacity: 0.8 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5 }}
             />
 
             <motion.div

@@ -70,6 +70,21 @@ const productSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+
+    isApproved: {
+      type: Boolean,
+      default: true,
+    },
+
+    isHidden: {
+      type: Boolean,
+      default: false,
+    },
+
+    isFeatured: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,

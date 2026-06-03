@@ -12,7 +12,7 @@ const useProductStore = create((set, get) => ({
   error: null,
 
   // ── Fetch all products (with optional filters) ──
-  fetchProducts: async ({ category = '', search = '', sort = '', minPrice = '', maxPrice = '' } = {}) => {
+  fetchProducts: async ({ category = '', search = '', sort = '', minPrice = '', maxPrice = '', rating = '' } = {}) => {
     set({ isLoading: true, error: null });
     try {
       const params = new URLSearchParams();
@@ -21,6 +21,7 @@ const useProductStore = create((set, get) => ({
       if (sort) params.append('sort', sort);
       if (minPrice) params.append('minPrice', minPrice);
       if (maxPrice) params.append('maxPrice', maxPrice);
+      if (rating) params.append('rating', rating);
 
       const res = await fetch(`${API_BASE}?${params.toString()}`);
       const data = await res.json();
@@ -78,6 +79,36 @@ const useProductStore = create((set, get) => ({
     } catch (err) {
       console.error('Failed to load categories:', err);
     }
+  },
+
+  settings: null,
+  announcements: [],
+  fetchSettings: async () => {
+    try {
+      const res = await fetch(`${API_BASE}/settings`);
+      const data = await res.json();
+      if (data.success) {
+        set({ settings: data.data });
+        return data.data;
+      }
+    } catch (err) {
+      console.error('Failed to load portal settings:', err);
+    }
+    return null;
+  },
+
+  fetchAnnouncements: async () => {
+    try {
+      const res = await fetch(`${API_BASE}/announcements`);
+      const data = await res.json();
+      if (data.success) {
+        set({ announcements: data.data });
+        return data.data;
+      }
+    } catch (err) {
+      console.error('Failed to load portal announcements:', err);
+    }
+    return [];
   },
 }));
 

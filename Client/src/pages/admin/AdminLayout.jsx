@@ -26,10 +26,44 @@ const AdminLayout = ({ children }) => {
 
   // Authentication check
   useEffect(() => {
-    const adminToken = localStorage.getItem('whiteocean_admin_token');
-    if (!adminToken) {
-      navigate('/admin/login');
-    }
+    const verifyAdmin = async () => {
+      const adminToken = localStorage.getItem('whiteocean_admin_token');
+      if (!adminToken) {
+        navigate('/admin/login');
+        return;
+      }
+
+      if (adminToken.startsWith('mock_')) {
+        setAdminName('Admin Master (Offline)');
+        return;
+      }
+
+      try {
+        const response = await fetch('http://localhost:8000/api/auth/me', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${adminToken}`
+          }
+        });
+        const data = await response.json();
+        
+        if (data.success && data.data && data.data.role === 'admin') {
+          const name = `${data.data.firstName || ''} ${data.data.lastName || ''}`.trim();
+          setAdminName(name || 'Admin Master');
+        } else {
+          // Token is invalid or not admin, clear it and redirect
+          localStorage.removeItem('whiteocean_admin_token');
+          navigate('/admin/login');
+        }
+      } catch (error) {
+        console.error('Admin authentication verification failed:', error);
+        // On server network error, we don't boot them out immediately if they have a token,
+        // but we print the warning.
+      }
+    };
+
+    verifyAdmin();
   }, [navigate]);
 
   const handleLogout = () => {
@@ -72,6 +106,21 @@ const AdminLayout = ({ children }) => {
 
   return (
     <div className="admin-workspace">
+      {/* Clickable backdrop overlay on mobile when sidebar is open */}
+      {mobileOpen && (
+        <div 
+          onClick={() => setMobileOpen(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(15, 23, 42, 0.4)',
+            backdropFilter: 'blur(4px)',
+            zIndex: 99,
+          }}
+          className="admin-sidebar-overlay"
+        />
+      )}
+
       {/* Sidebar navigation */}
       <aside className={`admin-sidebar ${mobileOpen ? 'mobile-open' : ''}`}>
         <div className="admin-sidebar-brand">

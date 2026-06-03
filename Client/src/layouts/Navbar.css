@@ -321,3 +321,92 @@
     font-size: 1.25rem;
   }
 }
+
+/* Announcement Bar Ticker Styles */
+.navbar-announcement-bar {
+  background: linear-gradient(135deg, #00AEEF 0%, #008ECC 100%);
+  color: #FFFFFF;
+  text-align: center;
+  padding: 0.5rem 1rem;
+  font-size: 0.825rem;
+  font-weight: 600;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.75rem;
+  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+  letter-spacing: 0.02em;
+  animation: fadeIn 0.4s ease-out;
+}
+
+.announcement-badge-text {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.announcement-message {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 80%;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Custom Seller Status Classes */
+.nav-link.become-vendor {
+  color: #10b981 !important;
+  font-weight: 600;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  padding: 0.35rem 0.75rem !important;
+  border-radius: 50px;
+  background-color: rgba(16, 185, 129, 0.05);
+  transition: all 0.3s ease;
+  margin-left: 0.5rem;
+}
+
+.nav-link.become-vendor:hover {
+  background-color: #10b981 !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+  transform: translateY(-1px);
+}
+
+.nav-link.app-pending {
+  color: #f59e0b !important;
+  font-weight: 600;
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  padding: 0.35rem 0.75rem !important;
+  border-radius: 50px;
+  background-color: rgba(245, 158, 11, 0.05);
+  transition: all 0.3s ease;
+  margin-left: 0.5rem;
+}
+
+.nav-link.app-pending:hover {
+  background-color: rgba(245, 158, 11, 0.1) !important;
+}
+
+.mobile-link.become-vendor {
+  color: #10b981 !important;
+  font-weight: 600;
+  border-left: 3px solid #10b981;
+  padding-left: 0.75rem !important;
+}
+
+.mobile-link.app-pending {
+  color: #f59e0b !important;
+  font-weight: 600;
+  border-left: 3px solid #f59e0b;
+  padding-left: 0.75rem !important;
+}
+

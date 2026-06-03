@@ -155,3 +155,18 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Customer Rating Filter Styles */
+.rating-filter-item {
+  color: var(--color-text-gray);
+  background: transparent;
+}
+
+.rating-filter-item:hover, .rating-filter-item.active {
+  background: var(--color-bg-alt) !important;
+  color: var(--color-primary) !important;
+}
+
+.rating-filter-item.active .stars-icon {
+  color: #f59e0b !important;
+}

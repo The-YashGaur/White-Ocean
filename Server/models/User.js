@@ -71,6 +71,23 @@ const userSchema = new mongoose.Schema(
       required: [true, "Please add an address"],
     },
 
+    role: {
+      type: String,
+      enum: ["customer", "vendor", "admin"],
+      default: "customer",
+    },
+
+    status: {
+      type: String,
+      enum: ["Active", "Blocked", "Pending"],
+      default: "Active",
+    },
+
+    totalSpent: {
+      type: Number,
+      default: 0,
+    },
+
     addresses: {
       type: [addressSchema],
       default: [],
@@ -134,6 +151,15 @@ const userSchema = new mongoose.Schema(
       type: Date,
       select: false,
     },
+    vendorApplication: {
+      isApplied: { type: Boolean, default: false },
+      companyName: { type: String, default: "" },
+      storeCategory: { type: String, default: "" },
+      supportPhone: { type: String, default: "" },
+      supportEmail: { type: String, default: "" },
+      description: { type: String, default: "" },
+      appliedAt: { type: Date }
+    }
   },
   {
     timestamps: true,

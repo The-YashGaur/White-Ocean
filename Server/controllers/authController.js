@@ -124,16 +124,20 @@ const loginUser = async (req, res) => {
     // Create token
     const token = generateToken(user._id);
 
-    // Set cookie
-    res.cookie('jwt', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV !== 'development',
-      sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-    });
+    // Set cookie only if noCookie is not requested (keeps admin console logins isolated from customer cookies)
+    const noCookie = req.query.noCookie === 'true' || req.headers['x-no-cookie'] === 'true';
+    if (!noCookie) {
+      res.cookie('jwt', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV !== 'development',
+        sameSite: 'lax',
+        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+      });
+    }
 
     res.json({
       success: true,
+      token,
       data: {
         _id: user._id,
         firstName: user.firstName,
@@ -144,7 +148,10 @@ const loginUser = async (req, res) => {
         profileImage: user.profileImage,
         PhoneVer: user.PhoneVer,
         EmailVer: user.EmailVer,
-        isEmailVerified: user.isEmailVerified
+        isEmailVerified: user.isEmailVerified,
+        role: user.role,
+        status: user.status,
+        vendorApplication: user.vendorApplication
       }
     });
   } catch (error) {
@@ -184,7 +191,10 @@ const getMe = async (req, res) => {
             profileImage: user.profileImage,
             PhoneVer: user.PhoneVer,
             EmailVer: user.EmailVer,
-            isEmailVerified: user.isEmailVerified
+            isEmailVerified: user.isEmailVerified,
+            role: user.role,
+            status: user.status,
+            vendorApplication: user.vendorApplication
         }
       });
     } else {
@@ -232,7 +242,10 @@ const updateProfile = async (req, res) => {
           profileImage: updatedUser.profileImage,
           PhoneVer: updatedUser.PhoneVer,
           EmailVer: updatedUser.EmailVer,
-          isEmailVerified: updatedUser.isEmailVerified
+          isEmailVerified: updatedUser.isEmailVerified,
+          role: updatedUser.role,
+          status: updatedUser.status,
+          vendorApplication: updatedUser.vendorApplication
         }
       });
     } else {
@@ -500,8 +513,49 @@ const verifyEmailOTP = async (req, res) => {
         profileImage: updatedUser.profileImage,
         PhoneVer: updatedUser.PhoneVer,
         EmailVer: updatedUser.EmailVer,
-        isEmailVerified: updatedUser.isEmailVerified
+        isEmailVerified: updatedUser.isEmailVerified,
+        role: updatedUser.role,
+        status: updatedUser.status,
+        vendorApplication: updatedUser.vendorApplication
       }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+// @desc    Submit Vendor Application request
+// @route   POST /api/auth/become-vendor
+// @access  Private
+const becomeVendor = async (req, res) => {
+  try {
+    const { companyName, storeCategory, supportPhone, supportEmail, description } = req.body;
+
+    if (!companyName || !storeCategory || !supportPhone || !supportEmail) {
+      return res.status(400).json({ success: false, error: 'Please enter all important onboarding details' });
+    }
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'User account not found' });
+    }
+
+    user.vendorApplication = {
+      isApplied: true,
+      companyName,
+      storeCategory,
+      supportPhone,
+      supportEmail,
+      description: description || '',
+      appliedAt: new Date()
+    };
+
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Onboarding merchant application submitted successfully under verification review queue!',
+      data: user
     });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
@@ -517,5 +571,6 @@ module.exports = {
   sendOTP,
   verifyOTP,
   sendEmailOTP,
-  verifyEmailOTP
+  verifyEmailOTP,
+  becomeVendor
 };

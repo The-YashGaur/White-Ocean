@@ -1,6 +1,15 @@
 const express = require('express');
 const router = express.Router();
-const { getProducts, getProductById, getCategories } = require('../controllers/productController');
+const { getProducts, getProductById, getCategories, getPublicSettings, getAnnouncements, getPublicVendors } = require('../controllers/productController');
+
+// GET /api/products/settings
+router.get('/settings', getPublicSettings);
+
+// GET /api/products/announcements
+router.get('/announcements', getAnnouncements);
+
+// GET /api/products/vendors
+router.get('/vendors', getPublicVendors);
 
 // GET /api/products/categories  — must come before /:id
 router.get('/categories', getCategories);

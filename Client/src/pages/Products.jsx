@@ -10,41 +10,54 @@ const Products = () => {
 
   const [activeCategory, setActiveCategory] = useState('All');
   const [searchText, setSearchText]         = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [sortOption, setSortOption]         = useState('');
   const [minPrice, setMinPrice]             = useState('');
   const [maxPrice, setMaxPrice]             = useState('');
+  const [rating, setRating]                 = useState('');
 
   // Fetch categories once on mount
   useEffect(() => {
     fetchCategories();
   }, [fetchCategories]);
 
+  // Debounce search text
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchText);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchText]);
+
   // Fetch products whenever filters change
   useEffect(() => {
     fetchProducts({
       category: activeCategory,
-      search:   searchText,
+      search:   debouncedSearch,
       sort:     sortOption,
       minPrice,
       maxPrice,
+      rating,
     });
-  }, [activeCategory, sortOption, fetchProducts]);
-  // Note: search is triggered manually via button / enter key to avoid per-keystroke API calls
+  }, [activeCategory, sortOption, debouncedSearch, rating, fetchProducts]);
 
   const handleSearch = () => {
-    fetchProducts({ category: activeCategory, search: searchText, sort: sortOption, minPrice, maxPrice });
+    fetchProducts({ category: activeCategory, search: searchText, sort: sortOption, minPrice, maxPrice, rating });
   };
 
   const handleApplyPrice = () => {
-    fetchProducts({ category: activeCategory, search: searchText, sort: sortOption, minPrice, maxPrice });
+    fetchProducts({ category: activeCategory, search: debouncedSearch, sort: sortOption, minPrice, maxPrice, rating });
   };
 
   const handleClearFilters = () => {
     setActiveCategory('All');
     setSearchText('');
+    setDebouncedSearch('');
     setSortOption('');
     setMinPrice('');
     setMaxPrice('');
+    setRating('');
     fetchProducts({});
   };
 
@@ -117,6 +130,36 @@ const Products = () => {
               <Button variant="outline" className="w-full mt-4" onClick={handleApplyPrice}>
                 Apply Filter
               </Button>
+            </div>
+
+            <div className="filter-card">
+              <h3 className="filter-title">Customer Rating</h3>
+              <ul className="rating-filter-list" style={{ listStyle: 'none', padding: 0, margin: '1rem 0 0 0', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                {[5, 4, 3, 2].map((stars) => (
+                  <li 
+                    key={stars}
+                    className={`rating-filter-item ${rating === stars ? 'active' : ''}`}
+                    onClick={() => setRating(rating === stars ? '' : stars)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      padding: '0.5rem 0.75rem',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      fontWeight: 500
+                    }}
+                  >
+                    <span className="stars-icon" style={{ color: '#fbbf24', fontSize: '1.1rem' }}>
+                      {'★'.repeat(stars)}{'☆'.repeat(5-stars)}
+                    </span>
+                    <span className="rating-text" style={{ fontSize: '0.9rem' }}>
+                      {stars === 5 ? '5★ only' : `${stars}★ & above`}
+                    </span>
+                  </li>
+                ))}
+              </ul>
             </div>
 
             <Button variant="ghost" className="w-full mt-2" onClick={handleClearFilters}>

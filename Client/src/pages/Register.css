@@ -150,7 +150,7 @@
   font-size: 0.875rem;
 }
 
-.input-wrapper {
+.auth-page .input-wrapper {
   width: 100%;
   display: flex;
   align-items: center;
@@ -162,12 +162,12 @@
   transition: all 0.3s ease;
 }
 
-.input-icon {
+.auth-page .input-icon {
   color: var(--color-text-gray);
   flex-shrink: 0;
 }
 
-.form-input {
+.auth-page .form-input {
   width: 100%;
   padding: 1rem 0;
   border: none;
@@ -177,22 +177,33 @@
   box-sizing: border-box;
 }
 
-.input-wrapper:has(.password-toggle) .form-input {
+.auth-page .input-wrapper:has(.password-toggle) .form-input {
   padding-right: 3.4rem;
 }
 
-.input-wrapper:focus-within {
+.auth-page .input-wrapper:focus-within {
   border-color: var(--color-primary);
   box-shadow: 0 0 0 3px rgba(0, 174, 239, 0.1);
 }
 
-.input-wrapper:has(.form-input.error) {
+.auth-page .input-wrapper:has(.form-input.error) {
   border-color: #ef4444;
 }
 
-.input-wrapper:has(.form-input.error):focus-within {
+.auth-page .input-wrapper:has(.form-input.error):focus-within {
   box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
 }
+
+/* Fix Chrome Autofill in Register Page */
+.auth-page input:-webkit-autofill,
+.auth-page input:-webkit-autofill:hover, 
+.auth-page input:-webkit-autofill:focus,
+.auth-page input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
+  -webkit-text-fill-color: var(--color-text-dark) !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
 
 .password-toggle {
   background: none;

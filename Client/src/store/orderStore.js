@@ -154,6 +154,54 @@ const useOrderStore = create((set) => ({
       };
     }
   },
+
+  validateCoupon: async (code, orderAmount) => {
+    try {
+      const response = await fetch(`${API_URL}/validate-coupon`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ code, orderAmount }),
+      });
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      return { success: false, error: 'Network error trying to validate coupon' };
+    }
+  },
+
+  createRazorpaySession: async (orderItems, couponCode) => {
+    set({ isLoading: true, error: null });
+
+    try {
+      const response = await fetch(`${API_URL}/razorpay-session`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ orderItems, couponCode }),
+      });
+
+      const data = await response.json();
+
+      set({ isLoading: false });
+      return data;
+    } catch (error) {
+      set({
+        isLoading: false,
+        error: 'Network error generating payment session',
+      });
+
+      return {
+        success: false,
+        error: 'Network error generating payment session',
+      };
+    }
+  },
 }));
 
 export default useOrderStore;

@@ -32,6 +32,12 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     setStats(getAnalytics());
+
+    const handleUpdate = () => {
+      setStats(getAnalytics());
+    };
+    window.addEventListener('adminDataUpdated', handleUpdate);
+    return () => window.removeEventListener('adminDataUpdated', handleUpdate);
   }, []);
 
   // Custom data points for the SVG charts

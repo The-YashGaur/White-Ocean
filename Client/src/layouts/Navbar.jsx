@@ -4,6 +4,7 @@ import { Search, ShoppingCart, User, Menu, X, LogOut } from 'lucide-react';
 import logo from '../assets/whiteocean.png';
 import useAuthStore from '../store/authStore';
 import useCartStore from '../store/cartStore';
+import useProductStore from '../store/productStore';
 import './Navbar.css';
 
 const Navbar = () => {
@@ -11,6 +12,10 @@ const Navbar = () => {
 
   const { user, isAuthenticated, logout } = useAuthStore();
   const { cartItems, setCartOwner, getCartCount } = useCartStore();
+  const { fetchAnnouncements } = useProductStore();
+
+  const [announcements, setAnnouncements] = useState([]);
+  const [currentNotifIndex, setCurrentNotifIndex] = useState(0);
 
   const navigate = useNavigate();
 
@@ -18,6 +23,24 @@ const Navbar = () => {
     const userId = user?._id || user?.id || user?.email || null;
     setCartOwner(userId);
   }, [user, setCartOwner]);
+
+  useEffect(() => {
+    const loadAnnouncements = async () => {
+      const list = await fetchAnnouncements();
+      if (list && list.length > 0) {
+        setAnnouncements(list);
+      }
+    };
+    loadAnnouncements();
+  }, [fetchAnnouncements]);
+
+  useEffect(() => {
+    if (announcements.length <= 1) return;
+    const interval = setInterval(() => {
+      setCurrentNotifIndex((prev) => (prev + 1) % announcements.length);
+    }, 6000);
+    return () => clearInterval(interval);
+  }, [announcements]);
 
   const cartCount = getCartCount();
 
@@ -29,10 +52,17 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="navbar">
-      <div className="container navbar-container">
-        <Link to="/" className="navbar-brand">
-          <img src={logo} alt="WhiteOcean Logo" className="navbar-logo-img" />
+    <>
+      {announcements.length > 0 && (
+        <div className="navbar-announcement-bar">
+          <span className="announcement-badge-text">{announcements[currentNotifIndex].type || 'PROMO'}</span>
+          <span className="announcement-message">{announcements[currentNotifIndex].message}</span>
+        </div>
+      )}
+      <nav className="navbar">
+        <div className="container navbar-container">
+          <Link to="/" className="navbar-brand">
+            <img src={logo} alt="WhiteOcean Logo" className="navbar-logo-img" />
           <span className="navbar-logo-text">
             White<span className="text-primary">Ocean</span>
           </span>
@@ -48,7 +78,18 @@ const Navbar = () => {
         <div className="navbar-links hidden-mobile">
           <Link to="/products" className="nav-link">Shop</Link>
           <Link to="/vendors" className="nav-link">Vendors</Link>
-          <Link to="/vendor/dashboard" className="nav-link">Vendor Dashboard</Link>
+          
+          {isAuthenticated && user?.role === 'vendor' && (
+            <Link to="/vendor/dashboard" className="nav-link">Vendor Dashboard</Link>
+          )}
+
+          {isAuthenticated && user?.role === 'customer' && !user?.vendorApplication?.isApplied && (
+            <Link to="/become-vendor" className="nav-link become-vendor">Become a Vendor</Link>
+          )}
+
+          {isAuthenticated && user?.role === 'customer' && user?.vendorApplication?.isApplied && (
+            <Link to="/become-vendor" className="nav-link app-pending">Application Pending</Link>
+          )}
         </div>
 
         <div className="navbar-icons">
@@ -132,14 +173,29 @@ const Navbar = () => {
                 Cart ({cartCount})
               </Link>
 
-              <Link to="/vendor/dashboard" className="mobile-link" onClick={() => setIsMobileMenuOpen(false)}>
-                Vendor Dashboard
-              </Link>
+              {isAuthenticated && user?.role === 'vendor' && (
+                <Link to="/vendor/dashboard" className="mobile-link" onClick={() => setIsMobileMenuOpen(false)}>
+                  Vendor Dashboard
+                </Link>
+              )}
+
+              {isAuthenticated && user?.role === 'customer' && !user?.vendorApplication?.isApplied && (
+                <Link to="/become-vendor" className="mobile-link become-vendor" onClick={() => setIsMobileMenuOpen(false)}>
+                  Become a Vendor
+                </Link>
+              )}
+
+              {isAuthenticated && user?.role === 'customer' && user?.vendorApplication?.isApplied && (
+                <Link to="/become-vendor" className="mobile-link app-pending" onClick={() => setIsMobileMenuOpen(false)}>
+                  Application Pending
+                </Link>
+              )}
             </div>
           </div>
         </div>
       )}
     </nav>
+    </>
   );
 };
 

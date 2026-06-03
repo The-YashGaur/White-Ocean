@@ -1,16 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CreditCard, Truck, CheckCircle2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import Button from '../components/ui/Button';
 import useCartStore from '../store/cartStore';
 import useOrderStore from '../store/orderStore';
+import useProductStore from '../store/productStore';
+import useAuthStore from '../store/authStore';
 import './Checkout.css';
 
 const Checkout = () => {
   const navigate = useNavigate();
 
+  const { user } = useAuthStore();
   const { cartItems, getSubtotal, clearCart } = useCartStore();
-  const { createOrder, isLoading } = useOrderStore();
+  const { createOrder, validateCoupon, createRazorpaySession, isLoading } = useOrderStore();
+  const { fetchSettings } = useProductStore();
 
   const [paymentMethod, setPaymentMethod] = useState('upi');
   const [saveAddress, setSaveAddress] = useState(true);
@@ -24,10 +28,69 @@ const Checkout = () => {
     landmark: '',
   });
 
+  // Coupon States
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [couponError, setCouponError] = useState('');
+  const [isCouponValidating, setIsCouponValidating] = useState(false);
+
+  // Settings State
+  const [activeSettings, setActiveSettings] = useState({
+    taxPercentage: 5,
+    freeDeliveryMin: 500,
+    deliveryCharge: 40
+  });
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      const s = await fetchSettings();
+      if (s) {
+        setActiveSettings({
+          taxPercentage: s.taxPercentage ?? 5,
+          freeDeliveryMin: s.freeDeliveryMin ?? 500,
+          deliveryCharge: s.deliveryCharge ?? 40
+        });
+      }
+    };
+    loadSettings();
+  }, [fetchSettings]);
+
   const subtotal = getSubtotal();
-  const tax = subtotal * 0.05;
-  const delivery = subtotal > 500 || subtotal === 0 ? 0 : 40;
-  const total = subtotal + tax + delivery;
+  const tax = subtotal * (activeSettings.taxPercentage / 100);
+  const delivery = subtotal >= activeSettings.freeDeliveryMin || subtotal === 0 ? 0 : activeSettings.deliveryCharge;
+
+  // Calculate discount
+  let discount = 0;
+  if (appliedCoupon) {
+    if (appliedCoupon.discountType === 'percentage') {
+      discount = subtotal * (appliedCoupon.discountValue / 100);
+    } else {
+      discount = appliedCoupon.discountValue;
+    }
+  }
+
+  const total = subtotal - discount + tax + delivery;
+
+  const handleApplyCoupon = async () => {
+    setCouponError('');
+    if (!couponCode.trim()) return;
+
+    setIsCouponValidating(true);
+    const result = await validateCoupon(couponCode, subtotal);
+    setIsCouponValidating(false);
+
+    if (result.success) {
+      setAppliedCoupon(result.data);
+    } else {
+      setCouponError(result.error || 'Invalid coupon');
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCode('');
+    setCouponError('');
+  };
 
   const handleAddressChange = (e) => {
     const { name, value } = e.target;
@@ -62,25 +125,85 @@ const Checkout = () => {
       return;
     }
 
-    const orderData = {
-      orderItems: cartItems.map((item) => ({
-        product: item._id,
-        quantity: item.quantity,
-      })),
+    if (paymentMethod === 'card' || paymentMethod === 'upi') {
+      const sessionResult = await createRazorpaySession(
+        cartItems.map((item) => ({ product: item._id, quantity: item.quantity })),
+        appliedCoupon ? appliedCoupon.code : undefined
+      );
 
-      shippingAddress: addressData,
-      paymentMethod,
-      saveAddress,
-    };
+      if (!sessionResult.success) {
+        alert(sessionResult.error || 'Failed to initiate secure payment session');
+        return;
+      }
 
-    const result = await createOrder(orderData);
+      const options = {
+        key: sessionResult.keyId,
+        amount: sessionResult.amount,
+        currency: sessionResult.currency,
+        name: 'White Ocean Store',
+        description: 'Secure Order Payment',
+        order_id: sessionResult.razorpayOrderId,
+        handler: async function (response) {
+          const finalOrderData = {
+            orderItems: cartItems.map((item) => ({
+              product: item._id,
+              quantity: item.quantity,
+            })),
+            shippingAddress: addressData,
+            paymentMethod: paymentMethod.toUpperCase(),
+            saveAddress,
+            couponCode: appliedCoupon ? appliedCoupon.code : undefined,
+            razorpayPaymentId: response.razorpay_payment_id,
+            razorpayOrderId: response.razorpay_order_id,
+            razorpaySignature: response.razorpay_signature,
+          };
 
-    if (result.success) {
-      alert(`Order placed successfully! Total Amount: ₹${result.data.totalPrice.toFixed(2)}`);
-      clearCart();
-      navigate('/profile');
+          const orderResult = await createOrder(finalOrderData);
+
+          if (orderResult.success) {
+            alert(`Order placed successfully! Total Amount: ₹${orderResult.data.totalPrice.toFixed(2)}`);
+            clearCart();
+            navigate('/profile');
+          } else {
+            alert(orderResult.error || 'Failed to complete order verification.');
+          }
+        },
+        prefill: {
+          name: user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : '',
+          email: user?.email || '',
+          contact: addressData.phone || user?.phone || '',
+        },
+        theme: {
+          color: '#3b82f6',
+        },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.on('payment.failed', function (response) {
+        alert(`Payment failed: ${response.error.description}`);
+      });
+      rzp.open();
     } else {
-      alert(result.error || 'Order failed');
+      const orderData = {
+        orderItems: cartItems.map((item) => ({
+          product: item._id,
+          quantity: item.quantity,
+        })),
+        shippingAddress: addressData,
+        paymentMethod: 'COD',
+        saveAddress,
+        couponCode: appliedCoupon ? appliedCoupon.code : undefined,
+      };
+
+      const result = await createOrder(orderData);
+
+      if (result.success) {
+        alert(`Order placed successfully! Total Amount: ₹${result.data.totalPrice.toFixed(2)}`);
+        clearCart();
+        navigate('/profile');
+      } else {
+        alert(result.error || 'Order failed');
+      }
     }
   };
 
@@ -245,34 +368,21 @@ const Checkout = () => {
               </div>
 
               {paymentMethod === 'card' && (
-                <div className="form-grid mt-6">
-                  <div className="form-group full-width">
-                    <label>Card Number</label>
-                    <input type="text" className="form-input" placeholder="0000 0000 0000 0000" />
-                  </div>
-
-                  <div className="form-group">
-                    <label>Expiry Date</label>
-                    <input type="text" className="form-input" placeholder="MM/YY" />
-                  </div>
-
-                  <div className="form-group">
-                    <label>CVC</label>
-                    <input type="text" className="form-input" placeholder="123" />
-                  </div>
-
-                  <div className="form-group full-width">
-                    <label>Name on Card</label>
-                    <input type="text" className="form-input" placeholder="Enter card holder name" />
+                <div className="payment-gateway-notice mt-6 p-4 rounded-lg bg-blue-50/50 border border-blue-100 flex items-center gap-3">
+                  <div className="text-primary text-xl">🛡️</div>
+                  <div style={{ fontSize: '0.9rem', color: 'var(--color-text-gray)', textAlign: 'left' }}>
+                    <p className="font-semibold" style={{ color: 'var(--color-text-dark)', marginBottom: '4px' }}>Secure Card Payment via Razorpay</p>
+                    <p style={{ margin: 0 }}>After clicking "Place Order", the secure Razorpay Checkout will open to safely complete your transaction.</p>
                   </div>
                 </div>
               )}
 
               {paymentMethod === 'upi' && (
-                <div className="form-grid mt-6">
-                  <div className="form-group full-width">
-                    <label>UPI ID</label>
-                    <input type="text" className="form-input" placeholder="example@upi" />
+                <div className="payment-gateway-notice mt-6 p-4 rounded-lg bg-blue-50/50 border border-blue-100 flex items-center gap-3">
+                  <div className="text-primary text-xl">⚡</div>
+                  <div style={{ fontSize: '0.9rem', color: 'var(--color-text-gray)', textAlign: 'left' }}>
+                    <p className="font-semibold" style={{ color: 'var(--color-text-dark)', marginBottom: '4px' }}>Instant UPI Payment via Razorpay</p>
+                    <p style={{ margin: 0 }}>After clicking "Place Order", you can pay instantly using Google Pay, PhonePe, Paytm, or any UPI ID in the secure Razorpay portal.</p>
                   </div>
                 </div>
               )}
@@ -296,14 +406,67 @@ const Checkout = () => {
 
               <div className="summary-divider"></div>
 
+              {/* Promo Coupon Section */}
+              <div className="coupon-section mt-4 mb-4" style={{ padding: '0.5rem 0' }}>
+                <label className="form-label" style={{ fontSize: '0.85rem', fontWeight: 600 }}>Apply Promo Code</label>
+                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.25rem' }}>
+                  <input
+                    type="text"
+                    className="form-input"
+                    style={{ textTransform: 'uppercase', padding: '0.4rem 0.75rem', fontSize: '0.9rem', flexGrow: 1 }}
+                    placeholder="e.g. SAVE20"
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value)}
+                    disabled={appliedCoupon !== null}
+                  />
+                  {appliedCoupon ? (
+                    <Button
+                      size="sm"
+                      style={{ padding: '0.4rem 0.75rem', fontSize: '0.9rem', backgroundColor: '#ef4444' }}
+                      onClick={handleRemoveCoupon}
+                    >
+                      Remove
+                    </Button>
+                  ) : (
+                    <Button
+                      size="sm"
+                      style={{ padding: '0.4rem 0.75rem', fontSize: '0.9rem' }}
+                      onClick={handleApplyCoupon}
+                      disabled={isCouponValidating}
+                    >
+                      {isCouponValidating ? '...' : 'Apply'}
+                    </Button>
+                  )}
+                </div>
+                {couponError && (
+                  <p style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.25rem' }}>
+                    {couponError}
+                  </p>
+                )}
+                {appliedCoupon && (
+                  <p style={{ color: '#22c55e', fontSize: '0.8rem', marginTop: '0.25rem', fontWeight: 600 }}>
+                    Code {appliedCoupon.code} applied successfully!
+                  </p>
+                )}
+              </div>
+
+              <div className="summary-divider"></div>
+
               <div className="summary-calc">
                 <div className="s-row">
                   <span>Subtotal</span>
                   <span>₹{subtotal.toFixed(2)}</span>
                 </div>
 
+                {discount > 0 && (
+                  <div className="s-row" style={{ color: '#22c55e', fontWeight: 600 }}>
+                    <span>Discount</span>
+                    <span>-₹{discount.toFixed(2)}</span>
+                  </div>
+                )}
+
                 <div className="s-row">
-                  <span>GST / Tax (5%)</span>
+                  <span>GST / Tax ({activeSettings.taxPercentage}%)</span>
                   <span>₹{tax.toFixed(2)}</span>
                 </div>
 

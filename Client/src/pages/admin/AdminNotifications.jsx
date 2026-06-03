@@ -31,6 +31,12 @@ const AdminNotifications = () => {
 
   useEffect(() => {
     setNotifications(getAdminData('notifications') || []);
+
+    const handleUpdate = () => {
+      setNotifications(getAdminData('notifications') || []);
+    };
+    window.addEventListener('adminDataUpdated', handleUpdate);
+    return () => window.removeEventListener('adminDataUpdated', handleUpdate);
   }, []);
 
   const filteredNotices = notifications.filter(n => 
@@ -41,7 +47,7 @@ const AdminNotifications = () => {
   // Toggle Active/Expired status
   const toggleStatus = (id) => {
     const updated = notifications.map(n => {
-      if (n.id === id) {
+      if (n._id === id || n.id === id) {
         return { ...n, status: n.status === 'Active' ? 'Expired' : 'Active' };
       }
       return n;
@@ -54,7 +60,7 @@ const AdminNotifications = () => {
     const confirm = window.confirm("Are you sure you want to permanently delete this bulletin?");
     if (!confirm) return;
 
-    const updated = notifications.filter(n => n.id !== id);
+    const updated = notifications.filter(n => n._id !== id && n.id !== id);
     setNotifications(updated);
     setAdminData('notifications', updated);
   };
@@ -63,6 +69,7 @@ const AdminNotifications = () => {
     e.preventDefault();
     const notice = {
       ...newNotice,
+      _id: 'mock_' + Date.now(),
       id: Date.now(),
       createdAt: new Date().toISOString()
     };
@@ -119,7 +126,7 @@ const AdminNotifications = () => {
           {filteredNotices.length > 0 ? (
             filteredNotices.map((n) => (
               <div 
-                key={n.id}
+                key={n._id || n.id}
                 style={{ 
                   display: 'flex', 
                   gap: '1.25rem', 
@@ -159,7 +166,7 @@ const AdminNotifications = () => {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', justifyContent: 'center' }}>
                   <button 
                     style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: n.status === 'Active' ? 'var(--admin-color-success)' : '#94a3b8' }}
-                    onClick={() => toggleStatus(n.id)}
+                    onClick={() => toggleStatus(n._id || n.id)}
                     title={n.status === 'Active' ? 'Mark Expired' : 'Mark Active'}
                   >
                     {n.status === 'Active' ? <ToggleRight size={32} /> : <ToggleLeft size={32} />}
@@ -167,7 +174,7 @@ const AdminNotifications = () => {
 
                   <button 
                     className="admin-btn admin-btn-danger admin-btn-sm admin-btn-icon"
-                    onClick={() => handleDelete(n.id)}
+                    onClick={() => handleDelete(n._id || n.id)}
                     title="Purge Bulletin"
                   >
                     <Trash2 size={14} />

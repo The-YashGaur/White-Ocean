@@ -124,6 +124,38 @@ const useAuthStore = create((set, get) => ({
       return { success: false, error: 'Update failed' };
     }
   },
+
+  becomeVendor: async (applicationData) => {
+    set({ isLoading: true });
+    
+    try {
+      const response = await fetch('http://localhost:8000/api/auth/become-vendor', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(applicationData),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        set({
+          user: data.data,
+          isLoading: false
+        });
+        return { success: true };
+      } else {
+        set({ isLoading: false });
+        return { success: false, error: data.error || 'Application submission failed' };
+      }
+    } catch (error) {
+      set({ isLoading: false });
+      return { success: false, error: 'Network error. Please try again later.' };
+    }
+  },
+  
   
   // Check if user is authenticated (for protected routes)
   checkAuth: async () => {
