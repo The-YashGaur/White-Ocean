@@ -4,12 +4,13 @@ import { motion } from 'framer-motion';
 import { Star, ShoppingCart } from 'lucide-react';
 import Button from './Button';
 import useCartStore from '../../store/cartStore';
+import { API_BASE_URL } from '../../config';
 import './ProductCard.css';
 const ProductCard = ({ product }) => {
   const navigate = useNavigate();
   const { addToCart } = useCartStore();
 
-  const API_URL = 'http://localhost:8000';
+  const API_URL = API_BASE_URL;
 
   const name = product.productName || product.name;
   const seller = product.sellerName || product.vendor;

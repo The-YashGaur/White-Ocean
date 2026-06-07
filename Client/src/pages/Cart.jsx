@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Trash2, Minus, Plus, ArrowRight } from 'lucide-react';
 import Button from '../components/ui/Button';
 import useCartStore from '../store/cartStore';
+import { API_BASE_URL } from '../config';
 import './Cart.css';
 
 const Cart = () => {
@@ -14,7 +15,7 @@ const Cart = () => {
     getSubtotal,
   } = useCartStore();
 
-  const API_URL = 'http://localhost:8000';
+  const API_URL = API_BASE_URL;
 
   const getImageUrl = (imagePath) => {
     if (!imagePath) {

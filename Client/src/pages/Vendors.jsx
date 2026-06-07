@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Search, Store, Star, Mail, Phone, ArrowRight, Activity } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import Button from '../components/ui/Button';
+import { API_BASE_URL } from '../config';
 import './Products.css'; // Leverage inventory catalog CSS
 
 const Vendors = () => {
@@ -13,7 +14,7 @@ const Vendors = () => {
   useEffect(() => {
     const fetchVendors = async () => {
       try {
-        const res = await fetch('http://localhost:8000/api/products/vendors');
+        const res = await fetch(`${API_BASE_URL}/api/products/vendors`);
         const data = await res.json();
         if (data.success) {
           setVendors(data.data);

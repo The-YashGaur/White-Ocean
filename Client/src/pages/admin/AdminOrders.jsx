@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getAdminData, setAdminData } from '../../data/adminMockData';
+import { API_BASE_URL } from '../../config';
 import { 
   Search, 
   Eye, 
@@ -25,7 +26,7 @@ const AdminOrders = () => {
         if (token && !token.startsWith('mock_')) {
           headers['Authorization'] = `Bearer ${token}`;
         }
-        const res = await fetch('http://localhost:8000/api/admin/orders', {
+        const res = await fetch(`${API_BASE_URL}/api/admin/orders`, {
           headers,
           credentials: 'include'
         });

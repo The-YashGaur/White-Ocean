@@ -16,6 +16,7 @@ import {
   UserCheck
 } from 'lucide-react';
 import logo from '../../assets/whiteocean.png';
+import { API_BASE_URL } from '../../config';
 import './AdminLayout.css';
 
 const AdminLayout = ({ children }) => {
@@ -39,7 +40,7 @@ const AdminLayout = ({ children }) => {
       }
 
       try {
-        const response = await fetch('http://localhost:8000/api/auth/me', {
+        const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',

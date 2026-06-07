@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { KeyRound, Mail, AlertCircle } from 'lucide-react';
 import logo from '../../assets/whiteocean.png';
+import { API_BASE_URL } from '../../config';
 import './AdminLayout.css';
 
 const AdminLogin = () => {
@@ -17,7 +18,7 @@ const AdminLogin = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch('http://localhost:8000/api/auth/login?noCookie=true', {
+      const response = await fetch(`${API_BASE_URL}/api/auth/login?noCookie=true`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',

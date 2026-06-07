@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Store, Star, Mail, Phone, Activity } from 'lucide-react';
 import ProductCard from '../components/ui/ProductCard';
+import { API_BASE_URL } from '../config';
 
 const VendorShop = () => {
   const { id } = useParams();
@@ -15,7 +16,7 @@ const VendorShop = () => {
       setIsLoading(true);
       try {
         // 1. Fetch public vendors list and find matching vendor
-        const resVendors = await fetch('http://localhost:8000/api/products/vendors');
+        const resVendors = await fetch(`${API_BASE_URL}/api/products/vendors`);
         const dataVendors = await resVendors.json();
         if (dataVendors.success) {
           const found = dataVendors.data.find(v => v.id === id);
@@ -23,7 +24,7 @@ const VendorShop = () => {
             setVendor(found);
             
             // 2. Fetch all products and filter by this sellerName
-            const resProds = await fetch('http://localhost:8000/api/products');
+            const resProds = await fetch(`${API_BASE_URL}/api/products`);
             const dataProds = await resProds.json();
             if (dataProds.success) {
               const filtered = dataProds.data.filter(

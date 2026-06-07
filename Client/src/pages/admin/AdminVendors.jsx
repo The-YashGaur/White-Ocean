@@ -13,8 +13,10 @@ import {
   Mail,
   Phone,
   Clock,
-  Loader
+  Loader,
+  ExternalLink
 } from 'lucide-react';
+import { API_BASE_URL } from '../../config';
 import './AdminLayout.css';
 
 const AdminVendors = () => {
@@ -34,7 +36,7 @@ const AdminVendors = () => {
     setErrorMsg('');
     try {
       // 1. Fetch approved vendors
-      const resVendors = await fetch('http://localhost:8000/api/admin/vendors', {
+      const resVendors = await fetch(`${API_BASE_URL}/api/admin/vendors`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include'
@@ -47,7 +49,7 @@ const AdminVendors = () => {
       }
 
       // 2. Fetch pending onboarding requests
-      const resApps = await fetch('http://localhost:8000/api/admin/vendors/applications', {
+      const resApps = await fetch(`${API_BASE_URL}/api/admin/vendors/applications`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include'
@@ -97,7 +99,7 @@ const AdminVendors = () => {
       setErrorMsg('');
       setSuccessMsg('');
       try {
-        const response = await fetch(`http://localhost:8000/api/admin/vendors/applications/${userId}/approve`, {
+        const response = await fetch(`${API_BASE_URL}/api/admin/vendors/applications/${userId}/approve`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include'
@@ -123,7 +125,7 @@ const AdminVendors = () => {
     setErrorMsg('');
     setSuccessMsg('');
     try {
-      const response = await fetch(`http://localhost:8000/api/admin/vendors/${vendorId}/status`, {
+      const response = await fetch(`${API_BASE_URL}/api/admin/vendors/${vendorId}/status`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

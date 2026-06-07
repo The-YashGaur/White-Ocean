@@ -1,4 +1,7 @@
 import { create } from 'zustand';
+import { API_BASE_URL } from '../config';
+
+const API_URL = `${API_BASE_URL}/api/auth`;
 
 const useAuthStore = create((set, get) => ({
   // State
@@ -11,7 +14,7 @@ const useAuthStore = create((set, get) => ({
     set({ isLoading: true });
     
     try {
-      const response = await fetch('http://localhost:8000/api/auth/login', {
+      const response = await fetch(`${API_URL}/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -46,7 +49,7 @@ const useAuthStore = create((set, get) => ({
     set({ isLoading: true });
     
     try {
-      const response = await fetch('http://localhost:8000/api/auth/register', {
+      const response = await fetch(`${API_URL}/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -80,7 +83,7 @@ const useAuthStore = create((set, get) => ({
   
   logout: async () => {
     try {
-      await fetch('http://localhost:8000/api/auth/logout', { 
+      await fetch(`${API_URL}/logout`, { 
         method: 'POST',
         credentials: 'include'
       });
@@ -98,7 +101,7 @@ const useAuthStore = create((set, get) => ({
     set({ isLoading: true });
     
     try {
-      const response = await fetch('http://localhost:8000/api/auth/profile', {
+      const response = await fetch(`${API_URL}/profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -129,7 +132,7 @@ const useAuthStore = create((set, get) => ({
     set({ isLoading: true });
     
     try {
-      const response = await fetch('http://localhost:8000/api/auth/become-vendor', {
+      const response = await fetch(`${API_URL}/become-vendor`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -161,7 +164,7 @@ const useAuthStore = create((set, get) => ({
   checkAuth: async () => {
     set({ isLoading: true });
     try {
-      const response = await fetch('http://localhost:8000/api/auth/me', {
+      const response = await fetch(`${API_URL}/me`, {
         method: 'GET',
         credentials: 'include'
       });
@@ -195,7 +198,7 @@ const useAuthStore = create((set, get) => ({
 
   sendEmailOTP: async (email) => {
     try {
-      const response = await fetch('http://localhost:8000/api/auth/send-email-otp', {
+      const response = await fetch(`${API_URL}/send-email-otp`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -214,7 +217,7 @@ const useAuthStore = create((set, get) => ({
   verifyEmailOTP: async (email, otp) => {
     set({ isLoading: true });
     try {
-      const response = await fetch('http://localhost:8000/api/auth/verify-email-otp', {
+      const response = await fetch(`${API_URL}/verify-email-otp`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

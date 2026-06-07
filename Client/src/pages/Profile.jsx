@@ -27,6 +27,7 @@ import {
 import Button from '../components/ui/Button';
 import useAuthStore from '../store/authStore';
 import useOrderStore from '../store/orderStore';
+import { API_BASE_URL } from '../config';
 import './Profile.css';
 
 const Profile = () => {
@@ -127,8 +128,8 @@ const Profile = () => {
     try {
       const url =
         type === 'email'
-          ? 'http://localhost:8000/api/auth/send-email-otp'
-          : 'http://localhost:8000/api/auth/send-otp';
+          ? `${API_BASE_URL}/api/auth/send-email-otp`
+          : `${API_BASE_URL}/api/auth/send-otp`;
 
       const response = await fetch(url, {
         method: 'POST',
@@ -171,8 +172,8 @@ const Profile = () => {
     try {
       const url =
         verifyingType === 'email'
-          ? 'http://localhost:8000/api/auth/verify-email-otp'
-          : 'http://localhost:8000/api/auth/verify-otp';
+          ? `${API_BASE_URL}/api/auth/verify-email-otp`
+          : `${API_BASE_URL}/api/auth/verify-otp`;
 
       const response = await fetch(url, {
         method: 'POST',
@@ -242,7 +243,7 @@ const Profile = () => {
     formData.append('image', file);
 
     try {
-      const response = await fetch('http://localhost:8000/api/upload', {
+      const response = await fetch(`${API_BASE_URL}/api/upload`, {
         method: 'POST',
         body: formData,
       });
@@ -298,7 +299,7 @@ const Profile = () => {
             src={
               user?.profileImage
                 ? user.profileImage.startsWith('/uploads')
-                  ? `http://localhost:8000${user.profileImage}`
+                  ? `${API_BASE_URL}${user.profileImage}`
                   : user.profileImage
                 : `https://ui-avatars.com/api/?name=${user?.firstName || 'U'}+${user?.lastName || ''}&background=random`
             }
@@ -442,11 +443,11 @@ const Profile = () => {
             src={
               editData.profileImage
                 ? editData.profileImage.startsWith('/uploads')
-                  ? `http://localhost:8000${editData.profileImage}`
+                  ? `${API_BASE_URL}${editData.profileImage}`
                   : editData.profileImage
                 : user?.profileImage
                   ? user.profileImage.startsWith('/uploads')
-                    ? `http://localhost:8000${user.profileImage}`
+                    ? `${API_BASE_URL}${user.profileImage}`
                     : user.profileImage
                   : `https://ui-avatars.com/api/?name=${user?.firstName || 'U'}+${user?.lastName || ''}&background=random`
             }
@@ -627,7 +628,7 @@ const Profile = () => {
               {selectedOrder.orderItems?.map((item, idx) => (
                 <div key={idx} className="detail-order-item" style={{ paddingBottom: idx < selectedOrder.orderItems.length - 1 ? '1.25rem' : '0', borderBottom: idx < selectedOrder.orderItems.length - 1 ? '1px solid #f1f5f9' : 'none' }}>
                   <img
-                    src={item.productImage.startsWith('/uploads') ? `http://localhost:8000${item.productImage}` : item.productImage}
+                    src={item.productImage.startsWith('/uploads') ? `${API_BASE_URL}${item.productImage}` : item.productImage}
                     alt={item.productName}
                     className="detail-order-item-img"
                   />

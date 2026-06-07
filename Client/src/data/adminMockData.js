@@ -1,5 +1,7 @@
+import { API_BASE_URL } from '../config';
+
 const STORAGE_PREFIX = 'whiteocean_admin_';
-const API_BASE = 'http://localhost:8000/api/admin';
+const API_BASE = `${API_BASE_URL}/api/admin`;
 
 // Helper: Get admin auth headers using stored JWT token
 const getAdminHeaders = () => {

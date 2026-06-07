@@ -19,9 +19,10 @@ import {
 import Button from '../components/ui/Button';
 import useAuthStore from '../store/authStore';
 import { Link } from 'react-router-dom';
+import { API_BASE_URL } from '../config';
 import './Cart.css'; // Leverage standard styling system
 
-const API_BASE = 'http://localhost:8000/api/vendor';
+const API_BASE = `${API_BASE_URL}/api/vendor`;
 
 const VendorDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview'); // 'overview', 'products', 'orders'

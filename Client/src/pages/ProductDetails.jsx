@@ -13,6 +13,7 @@ import {
 import Button from '../components/ui/Button';
 import useProductStore from '../store/productStore';
 import useCartStore from '../store/cartStore';
+import { API_BASE_URL } from '../config';
 import './ProductDetails.css';
 
 const ProductDetails = () => {
@@ -31,7 +32,7 @@ const ProductDetails = () => {
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState('');
 
-  const API_URL = 'http://localhost:8000';
+  const API_URL = API_BASE_URL;
 
   const getImageUrl = (imagePath) => {
     if (!imagePath) {

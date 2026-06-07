@@ -5,6 +5,7 @@ import logo from '../assets/whiteocean.png';
 import useAuthStore from '../store/authStore';
 import useCartStore from '../store/cartStore';
 import useProductStore from '../store/productStore';
+import { API_BASE_URL } from '../config';
 import './Navbar.css';
 
 const Navbar = () => {
@@ -100,7 +101,7 @@ const Navbar = () => {
                   src={
                     user?.profileImage
                       ? user.profileImage.startsWith('/uploads')
-                        ? `http://localhost:8000${user.profileImage}`
+                        ? `${API_BASE_URL}${user.profileImage}`
                         : user.profileImage
                       : `https://ui-avatars.com/api/?name=${user?.firstName || 'U'}+${user?.lastName || ''}&background=random`
                   }
