@@ -127,10 +127,11 @@ const loginUser = async (req, res) => {
     // Set cookie only if noCookie is not requested (keeps admin console logins isolated from customer cookies)
     const noCookie = req.query.noCookie === 'true' || req.headers['x-no-cookie'] === 'true';
     if (!noCookie) {
+      const isProduction = process.env.NODE_ENV !== 'development';
       res.cookie('jwt', token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV !== 'development',
-        sameSite: 'lax',
+        secure: isProduction,
+        sameSite: isProduction ? 'none' : 'lax',
         maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
       });
     }
@@ -159,12 +160,12 @@ const loginUser = async (req, res) => {
   }
 };
 
-// @desc    Logout user / clear cookie
-// @route   POST /api/auth/logout
-// @access  Public
 const logoutUser = (req, res) => {
+  const isProduction = process.env.NODE_ENV !== 'development';
   res.cookie('jwt', '', {
     httpOnly: true,
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'lax',
     expires: new Date(0)
   });
 
@@ -493,10 +494,11 @@ const verifyEmailOTP = async (req, res) => {
 
     // Generate JWT & set cookie to allow immediate login on success
     const token = generateToken(updatedUser._id);
+    const isProduction = process.env.NODE_ENV !== 'development';
     res.cookie('jwt', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV !== 'development',
-      sameSite: 'lax',
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
     });
 
